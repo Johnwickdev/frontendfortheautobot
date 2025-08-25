@@ -1,29 +1,95 @@
-.toolbar {
+.layout {
+  display: flex;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+.sidebar {
+  width: 200px;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+.sidebar .logo {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+.sidebar nav a {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 6px;
+}
+.sidebar nav a.active {
+  background: var(--accent);
+  color: #fff;
+}
+.sidebar .spacer {
+  flex: 1;
+}
+.sidebar .mode {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.topbar .left {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 1rem;
+}
+.topbar .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 .token {
   padding: 4px 8px;
-  border-radius: 4px;
-  background: #264;
+  border-radius: 8px;
   color: #fff;
-}
-.token.warn {
-  background: #642;
 }
 .sse-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #a00;
+  background: var(--danger);
 }
 .sse-dot.connected {
-  background: #0a0;
+  background: var(--positive);
+}
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 10px;
 }
 .charts {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: grid;
+  gap: 1rem;
 }
