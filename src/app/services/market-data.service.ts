@@ -30,7 +30,8 @@ export class MarketDataService {
   private connectionStatus = new BehaviorSubject<boolean>(false);
   connection$ = this.connectionStatus.asObservable();
   ticks$ = this.tickSub.asObservable();
-  private reconnectDelay = 1000;
+  private delays = [1000, 2000, 5000, 10000];
+  private delayIndex = 0;
 
   /** attempt to fetch currently tracked instruments from backend */
   listTracked(): Observable<string[]> {
@@ -67,10 +68,12 @@ export class MarketDataService {
       this.sse.onerror = () => {
         this.connectionStatus.next(false);
         this.sse?.close();
-        setTimeout(open, this.reconnectDelay);
-        this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30000);
+        const delay = this.delays[this.delayIndex];
+        setTimeout(open, delay);
+        if (this.delayIndex < this.delays.length - 1) this.delayIndex++;
       };
     };
+    this.delayIndex = 0;
     open();
   }
 
@@ -80,6 +83,6 @@ export class MarketDataService {
       this.sse = null;
     }
     this.connectionStatus.next(false);
-    this.reconnectDelay = 1000;
+    this.delayIndex = 0;
   }
 }

@@ -1,17 +1,41 @@
-<div class="toolbar">
-  <span class="token" [class.warn]="authState && authState.expiresInSec < 300">
-    Token:
-    <ng-container *ngIf="authState?.ready; else disc">
-      Connected — expires in {{ (authState?.expiresInSec || 0) * 1000 | date:'HH:mm:ss':'UTC' }}
-    </ng-container>
-    <ng-template #disc>Disconnected</ng-template>
-  </span>
-  <span class="sse-dot" [class.connected]="(md.connection$ | async)"></span>
-  <select multiple [(ngModel)]="selected" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
-    <option *ngFor="let i of instruments" [ngValue]="i">{{ i }}</option>
-  </select>
-</div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Autobot</div>
+    <nav>
+      <a class="active">Dashboard</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="mode" (click)="toggleDark()">{{ darkMode ? 'Light' : 'Dark' }} Mode</button>
+  </aside>
 
-<div class="charts">
-  <app-candlestick-chart *ngFor="let k of selected" [instrumentKey]="k"></app-candlestick-chart>
+  <div class="main">
+    <header class="topbar">
+      <div class="left">
+        <span class="token" [style.background]="tokenColor()">
+          Token:
+          <ng-container *ngIf="authState?.ready; else disc">
+            Connected — expires in {{ tokenCountdown() }}
+          </ng-container>
+          <ng-template #disc>Disconnected</ng-template>
+        </span>
+        <span class="sse-dot" [class.connected]="(md.connection$ | async)"></span>
+      </div>
+      <div class="right">
+        <button *ngIf="!authState?.ready" (click)="loginWithUpstox()">Login with Upstox</button>
+        <select multiple [(ngModel)]="selected" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
+          <option *ngFor="let i of instruments" [ngValue]="i">{{ i }}</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="stats">
+        <div class="stat-card" *ngFor="let k of selected">{{ k }} LTP: {{ nowLtp[k] || '-' }}</div>
+        <div class="stat-card">Subscribed: {{ selected.length }}</div>
+      </div>
+      <div class="charts">
+        <app-candlestick-chart *ngFor="let k of selected" [instrumentKey]="k"></app-candlestick-chart>
+      </div>
+    </div>
+  </div>
 </div>
