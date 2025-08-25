@@ -23,9 +23,9 @@ export class AuthService {
     return this.http.post<void>(`${this.baseUrl}/auth/exchange?code=${code}`, null);
   }
 
-  /** 3️⃣  poll the backend every 3 s until it says `ready:true` */
+  /** 3️⃣  poll the backend every 15 s until it says `ready:true` */
   pollStatus(): Observable<AuthState> {
-    return timer(0, 3000).pipe(
+    return timer(0, 15000).pipe(
       switchMap(() => this.http.get<AuthState>(`${this.baseUrl}/auth/status`)),
       shareReplay(1)
     );
