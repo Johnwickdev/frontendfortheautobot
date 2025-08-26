@@ -23,7 +23,7 @@ export interface Tick {
 export class MarketDataService {
   private http = inject(HttpClient);
   private zone = inject(NgZone);
-  private baseUrl = environment.apiBaseUrl;
+  private apiBase = environment.apiBase;
 
   private sse: EventSource | null = null;
   private tickSub = new Subject<Tick>();
@@ -36,13 +36,13 @@ export class MarketDataService {
   /** fetch selection of main instrument and options */
   getSelection(): Observable<{ mainInstrument: string; options: string[] } | null> {
     return this.http
-      .get<{ mainInstrument: string; options: string[] }>(`${this.baseUrl}/md/selection`)
+      .get<{ mainInstrument: string; options: string[] }>(`${this.apiBase}/md/selection`)
       .pipe(catchError(() => of(null)));
   }
 
   /** load historical candles */
   getCandles(key: string): Observable<Candle[]> {
-    return this.http.get<Candle[]>(`${this.baseUrl}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
+    return this.http.get<Candle[]>(`${this.apiBase}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
   }
 
   /** connect to the streaming endpoint for the selected instruments */
@@ -50,7 +50,7 @@ export class MarketDataService {
     this.disconnect();
     if (!keys.length) return;
     const params = keys.map(k => `instrumentKey=${encodeURIComponent(k)}`).join('&');
-    const url = `${this.baseUrl}/md/stream?${params}`;
+    const url = `${this.apiBase}/md/stream?${params}`;
     const open = () => {
       this.sse = new EventSource(url);
       this.connectionStatus.next(true);
