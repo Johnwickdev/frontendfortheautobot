@@ -12,29 +12,42 @@
     <header class="topbar">
       <div class="left">
         <span class="token" [style.background]="tokenColor()">
+          <span class="dot" [class.connected]="authState?.ready"></span>
           Token:
           <ng-container *ngIf="authState?.ready; else disc">
             Connected — expires in {{ tokenCountdown() }}
           </ng-container>
           <ng-template #disc>Disconnected</ng-template>
         </span>
-        <span class="sse-dot" [class.connected]="(md.connection$ | async)"></span>
       </div>
       <div class="right">
         <button *ngIf="!authState?.ready" (click)="loginWithUpstox()">Login with Upstox</button>
-        <select multiple [(ngModel)]="selected" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
-          <option *ngFor="let i of instruments" [ngValue]="i">{{ i }}</option>
+        <select *ngIf="authState?.ready" multiple [(ngModel)]="selectedOptions" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
+          <option *ngFor="let i of options" [ngValue]="i">{{ i }}</option>
         </select>
       </div>
     </header>
 
     <div class="content">
       <div class="stats">
-        <div class="stat-card" *ngFor="let k of selected">{{ k }} LTP: {{ nowLtp[k] || '-' }}</div>
-        <div class="stat-card">Subscribed: {{ selected.length }}</div>
+        <div class="stat-card" *ngFor="let k of [mainInstrument, ...selectedOptions]">{{ k }} LTP: {{ nowLtp[k] || '-' }}</div>
       </div>
       <div class="charts">
-        <app-candlestick-chart *ngFor="let k of selected" [instrumentKey]="k"></app-candlestick-chart>
+        <app-candlestick-chart
+          class="main-chart"
+          [instrumentKey]="mainInstrument"
+          [width]="800"
+          [height]="400"
+        ></app-candlestick-chart>
+        <div class="option-charts">
+          <app-candlestick-chart
+            class="mini-chart"
+            *ngFor="let k of selectedOptions"
+            [instrumentKey]="k"
+            [width]="400"
+            [height]="200"
+          ></app-candlestick-chart>
+        </div>
       </div>
     </div>
   </div>
