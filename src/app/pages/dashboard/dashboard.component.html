@@ -22,7 +22,7 @@
       </div>
       <div class="right">
         <button *ngIf="!authState?.ready" (click)="loginWithUpstox()">Login with Upstox</button>
-        <select multiple [(ngModel)]="selected" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
+        <select multiple [(ngModel)]="selectedOptions" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
           <option *ngFor="let i of instruments" [ngValue]="i">{{ i }}</option>
         </select>
       </div>
@@ -30,11 +30,20 @@
 
     <div class="content">
       <div class="stats">
-        <div class="stat-card" *ngFor="let k of selected">{{ k }} LTP: {{ nowLtp[k] || '-' }}</div>
-        <div class="stat-card">Subscribed: {{ selected.length }}</div>
+        <div class="stat-card" *ngFor="let k of combinedInstruments; trackBy: trackByKey">
+          {{ k }} LTP: {{ (nowLtp?.[k] ?? '-') }}
+        </div>
+        <div class="stat-card">Subscribed: {{ combinedInstruments.length }}</div>
       </div>
       <div class="charts">
-        <app-candlestick-chart *ngFor="let k of selected" [instrumentKey]="k"></app-candlestick-chart>
+        <app-candlestick-chart
+          *ngIf="mainInstrument"
+          [instrumentKey]="mainInstrument"></app-candlestick-chart>
+        <ng-container *ngIf="selectedOptions?.length">
+          <app-candlestick-chart
+            *ngFor="let k of selectedOptions; trackBy: trackByKey"
+            [instrumentKey]="k"></app-candlestick-chart>
+        </ng-container>
       </div>
     </div>
   </div>
