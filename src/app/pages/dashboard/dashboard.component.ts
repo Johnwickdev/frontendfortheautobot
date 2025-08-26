@@ -17,10 +17,18 @@ import { formatCountdown } from '../../utils/time';
 export class DashboardComponent implements OnInit, OnDestroy {
   authState?: AuthState;
   instruments: string[] = [];
-  selected: string[] = [];
-  nowLtp: Record<string, number> = {};
+  mainInstrument: string = '';
+  selectedOptions: string[] = [];
+  nowLtp: Record<string, number | undefined> = {};
   darkMode = true;
   private sub = new Subscription();
+
+  trackByKey = (_: number, k: string) => k;
+
+  get combinedInstruments(): string[] {
+    const base = this.mainInstrument ? [this.mainInstrument] : [];
+    return [...base, ...(this.selectedOptions ?? [])].filter(Boolean) as string[];
+  }
 
   constructor(
     private auth: AuthService,
@@ -41,9 +49,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.md.listTracked().subscribe(list => {
         this.instruments = list;
-        const saved = localStorage.getItem('instruments');
-        this.selected = saved ? JSON.parse(saved) : list;
-        this.md.connect(this.selected);
+        const savedMain = localStorage.getItem('mainInstrument');
+        const savedOpts = localStorage.getItem('selectedOptions');
+        this.mainInstrument = savedMain || (list[0] || '');
+        this.selectedOptions = savedOpts ? JSON.parse(savedOpts) : list.filter(i => i !== this.mainInstrument);
+        this.md.connect(this.combinedInstruments);
       })
     );
 
@@ -55,8 +65,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onSelectionChange() {
-    localStorage.setItem('instruments', JSON.stringify(this.selected));
-    this.md.connect(this.selected);
+    localStorage.setItem('mainInstrument', this.mainInstrument);
+    localStorage.setItem('selectedOptions', JSON.stringify(this.selectedOptions));
+    this.md.connect(this.combinedInstruments);
   }
 
   loginWithUpstox(): void {
