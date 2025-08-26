@@ -1,0 +1,40 @@
+<div class="table-card">
+  <div class="header">
+    <h3>Transaction History</h3>
+    <div class="actions">
+      <button class="download">Download</button>
+      <button class="more"><img src="../../assets/icons/kebab.svg" alt="menu" /></button>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Product Name</th>
+        <th>Order amount</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Executed by</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of data">
+        <td class="product">
+          <div class="avatar small">{{ row.product.charAt(0) }}</div>
+          <div class="info">
+            <div class="name">{{ row.product }}</div>
+            <div class="category">{{ row.category }}</div>
+          </div>
+        </td>
+        <td>{{ row.amount }}</td>
+        <td>{{ row.date }}</td>
+        <td><span class="status" [ngClass]="row.status.toLowerCase()">{{ row.status }}</span></td>
+        <td class="assignee">
+          <div class="avatar">{{ row.assignee.charAt(0).toUpperCase() }}</div>
+          {{ row.assignee }}
+        </td>
+        <td><img src="../../assets/icons/kebab.svg" alt="menu" /></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

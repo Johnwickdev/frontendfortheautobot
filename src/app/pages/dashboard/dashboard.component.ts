@@ -1,103 +1,46 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService, AuthState } from '../../services/auth.service';
-import { MarketDataService } from '../../services/market-data.service';
-import { CandlestickChartComponent } from './candlestick-chart.component';
-import { Subscription } from 'rxjs';
-import { formatCountdown } from '../../utils/time';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { TopbarComponent } from './components/topbar/topbar.component';
+import { KpiCardComponent } from './components/kpi-card/kpi-card.component';
+import { LineCardComponent } from './components/line-card/line-card.component';
+import { ProgressCardComponent } from './components/progress-card/progress-card.component';
+import { TableCardComponent } from './components/table-card/table-card.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CandlestickChartComponent],
+  imports: [CommonModule, SidebarComponent, TopbarComponent, KpiCardComponent, LineCardComponent, ProgressCardComponent, TableCardComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit, OnDestroy {
-  authState?: AuthState;
-  mainInstrument: string = '';
-  selectedOptions: string[] = [];
-  nowLtp: Record<string, number | undefined> = {};
-  darkMode = true;
-  private sub = new Subscription();
+export class DashboardComponent {
+  sidebarCollapsed = false;
 
-  trackByKey = (_: number, k: string) => k;
+  kpis = [
+    { title: 'Total income', value: '$348,261', delta: '+1.25%', positive: true, gradient: true },
+    { title: 'Total users', value: '15,708.98', delta: '-5.38%', positive: false, gradient: false },
+    { title: 'Total revenue', value: '7,415.644', delta: '', positive: true, gradient: false },
+    { title: 'Total conversion', value: '10.87%', delta: '+25.45%', positive: true, gradient: false }
+  ];
 
-  get combinedInstruments(): string[] {
-    const base = this.mainInstrument ? [this.mainInstrument] : [];
-    return [...base, ...(this.selectedOptions ?? [])].filter(Boolean) as string[];
-  }
+  progress = [
+    { flag: '🇺🇸', label: 'United States', value: 85 },
+    { flag: '🇯🇵', label: 'Japan', value: 70 },
+    { flag: '🇮🇩', label: 'Indonesia', value: 45 },
+    { flag: '🇰🇷', label: 'South Korea', value: 38 }
+  ];
 
-  constructor(
-    private auth: AuthService,
-    public md: MarketDataService
-  ) {}
+  transactions = [
+    { product: 'Macbook Pro M3', category: 'Laptop', amount: '$2,400', date: 'Oct 21, 2024', status: 'Processing', assignee: 'sam@apex.com' },
+    { product: 'iPhone 15 Pro', category: 'Phone', amount: '$1,299', date: 'Oct 21, 2024', status: 'Success', assignee: 'jane@apex.com' },
+    { product: 'AirPods Max', category: 'Headphones', amount: '$549', date: 'Oct 20, 2024', status: 'Declined', assignee: 'tom@apex.com' },
+    { product: 'Surface Book', category: 'Laptop', amount: '$2,100', date: 'Oct 18, 2024', status: 'Processing', assignee: 'anna@apex.com' },
+    { product: 'PlayStation 5', category: 'Console', amount: '$499', date: 'Oct 16, 2024', status: 'Success', assignee: 'joe@apex.com' },
+    { product: 'Dell Monitor', category: 'Monitor', amount: '$299', date: 'Oct 15, 2024', status: 'Processing', assignee: 'lisa@apex.com' }
+  ];
 
-  ngOnInit(): void {
-    const storedDark = localStorage.getItem('darkMode');
-    this.darkMode = storedDark !== '0';
-    document.body.classList.toggle('light', !this.darkMode);
-
-    this.sub.add(
-      this.auth.pollStatus().subscribe(s => {
-        this.authState = s;
-      })
-    );
-
-    this.sub.add(
-      this.md.getSelection().subscribe(sel => {
-        if (sel) {
-          this.mainInstrument = sel.mainInstrument;
-          this.selectedOptions = sel.options || [];
-          localStorage.setItem('mainInstrument', this.mainInstrument);
-          localStorage.setItem('selectedOptions', JSON.stringify(this.selectedOptions));
-        } else {
-          const savedMain = localStorage.getItem('mainInstrument') || '';
-          const savedOpts = localStorage.getItem('selectedOptions');
-          this.mainInstrument = savedMain;
-          this.selectedOptions = savedOpts ? JSON.parse(savedOpts) : [];
-        }
-        if (this.mainInstrument) {
-          this.md.connect(this.combinedInstruments);
-        }
-      })
-    );
-
-    this.sub.add(
-      this.md.ticks$.subscribe(t => {
-        this.nowLtp[t.instrumentKey] = t.ltp;
-      })
-    );
-  }
-
-  tokenCountdown(): string {
-    return formatCountdown(this.authState?.expiresInSec || 0);
-  }
-
-  tokenColor(): string {
-    if (!this.authState?.ready) return 'var(--danger)';
-    const sec = this.authState.expiresInSec;
-    if (sec > 1800) return 'var(--positive)';
-    if (sec > 300) return 'var(--warning)';
-    return 'var(--danger)';
-  }
-
-  get option1(): string | undefined {
-    return this.selectedOptions[0];
-  }
-
-  get option2(): string | undefined {
-    return this.selectedOptions[1];
-  }
-
-  toggleDark() {
-    this.darkMode = !this.darkMode;
-    document.body.classList.toggle('light', !this.darkMode);
-    localStorage.setItem('darkMode', this.darkMode ? '1' : '0');
-  }
-
-  ngOnDestroy() {
-    this.sub.unsubscribe();
-    this.md.disconnect();
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 }

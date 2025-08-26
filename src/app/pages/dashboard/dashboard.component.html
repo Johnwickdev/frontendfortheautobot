@@ -1,45 +1,16 @@
-<div class="layout">
-  <aside class="sidebar">
-    <div class="logo">Autobot</div>
-    <nav>
-      <a class="active">Dashboard</a>
-    </nav>
-    <div class="spacer"></div>
-    <button class="mode" (click)="toggleDark()">{{ darkMode ? 'Light' : 'Dark' }} Mode</button>
-  </aside>
-
+<div class="layout" [class.collapsed]="sidebarCollapsed">
+  <app-sidebar [collapsed]="sidebarCollapsed"></app-sidebar>
   <div class="main">
-    <header class="topbar">
-      <div class="left">
-        <span class="token" [style.background]="tokenColor()">
-          Token:
-          <ng-container *ngIf="authState?.ready; else disc">
-            Connected — expires in {{ tokenCountdown() }}
-          </ng-container>
-          <ng-template #disc>Disconnected</ng-template>
-        </span>
-        <span class="sse-dot" [class.connected]="(md.connection$ | async)"></span>
-      </div>
-      <div class="right">
-        <span class="chip" *ngFor="let k of combinedInstruments; trackBy: trackByKey">{{ k }}</span>
-      </div>
-    </header>
-
+    <app-topbar (menu)="toggleSidebar()"></app-topbar>
     <div class="content">
-      <div class="stats">
-        <div class="stat-card">FUT LTP: {{ nowLtp?.[mainInstrument] ?? '-' }}</div>
-        <div class="stat-card">CE LTP: {{ option1 ? (nowLtp?.[option1] ?? '-') : '-' }}</div>
-        <div class="stat-card">PE LTP: {{ option2 ? (nowLtp?.[option2] ?? '-') : '-' }}</div>
-        <div class="stat-card">Subscribed: {{ combinedInstruments.length }}</div>
+      <div class="kpi-row">
+        <app-kpi-card *ngFor="let k of kpis" [title]="k.title" [value]="k.value" [delta]="k.delta" [positive]="k.positive" [gradient]="k.gradient"></app-kpi-card>
       </div>
-      <div class="charts">
-        <div class="main-chart" *ngIf="mainInstrument">
-          <app-candlestick-chart [instrumentKey]="mainInstrument"></app-candlestick-chart>
-        </div>
-        <div class="opt-chart" *ngFor="let k of selectedOptions; trackBy: trackByKey">
-          <app-candlestick-chart [instrumentKey]="k"></app-candlestick-chart>
-        </div>
+      <div class="middle-row">
+        <app-line-card></app-line-card>
+        <app-progress-card [data]="progress"></app-progress-card>
       </div>
+      <app-table-card [data]="transactions"></app-table-card>
     </div>
   </div>
 </div>
