@@ -65,8 +65,10 @@ export class CandlestickChartComponent implements OnInit, OnDestroy {
     if (!canvas) return;
     if (!this.ctx) this.ctx = canvas.getContext('2d')!;
     const ctx = this.ctx;
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
     ctx.clearRect(0, 0, w, h);
     if (!this.candles.length) return;
     const max = Math.max(...this.candles.map(c => c.high));

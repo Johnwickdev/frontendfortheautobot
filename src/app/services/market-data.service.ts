@@ -1,6 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, catchError, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Candle {
@@ -33,14 +33,11 @@ export class MarketDataService {
   private delays = [1000, 2000, 5000, 10000];
   private delayIndex = 0;
 
-  /** attempt to fetch currently tracked instruments from backend */
-  listTracked(): Observable<string[]> {
+  /** fetch selection of main instrument and options */
+  getSelection(): Observable<{ mainInstrument: string; options: string[] } | null> {
     return this.http
-      .get<{ instrumentKeys: string[] }>(`${this.baseUrl}/md/tracked`)
-      .pipe(
-        map(r => r.instrumentKeys),
-        catchError(() => of(['NIFTY_FUT', 'NIFTY_CE', 'NIFTY_PE']))
-      );
+      .get<{ mainInstrument: string; options: string[] }>(`${this.baseUrl}/md/selection`)
+      .pipe(catchError(() => of(null)));
   }
 
   /** load historical candles */

@@ -21,29 +21,24 @@
         <span class="sse-dot" [class.connected]="(md.connection$ | async)"></span>
       </div>
       <div class="right">
-        <button *ngIf="!authState?.ready" (click)="loginWithUpstox()">Login with Upstox</button>
-        <select multiple [(ngModel)]="selectedOptions" (change)="onSelectionChange()" [ngModelOptions]="{standalone: true}">
-          <option *ngFor="let i of instruments" [ngValue]="i">{{ i }}</option>
-        </select>
+        <span class="chip" *ngFor="let k of combinedInstruments; trackBy: trackByKey">{{ k }}</span>
       </div>
     </header>
 
     <div class="content">
       <div class="stats">
-        <div class="stat-card" *ngFor="let k of combinedInstruments; trackBy: trackByKey">
-          {{ k }} LTP: {{ (nowLtp?.[k] ?? '-') }}
-        </div>
+        <div class="stat-card">FUT LTP: {{ nowLtp?.[mainInstrument] ?? '-' }}</div>
+        <div class="stat-card">CE LTP: {{ option1 ? (nowLtp?.[option1] ?? '-') : '-' }}</div>
+        <div class="stat-card">PE LTP: {{ option2 ? (nowLtp?.[option2] ?? '-') : '-' }}</div>
         <div class="stat-card">Subscribed: {{ combinedInstruments.length }}</div>
       </div>
       <div class="charts">
-        <app-candlestick-chart
-          *ngIf="mainInstrument"
-          [instrumentKey]="mainInstrument"></app-candlestick-chart>
-        <ng-container *ngIf="selectedOptions?.length">
-          <app-candlestick-chart
-            *ngFor="let k of selectedOptions; trackBy: trackByKey"
-            [instrumentKey]="k"></app-candlestick-chart>
-        </ng-container>
+        <div class="main-chart" *ngIf="mainInstrument">
+          <app-candlestick-chart [instrumentKey]="mainInstrument"></app-candlestick-chart>
+        </div>
+        <div class="opt-chart" *ngFor="let k of selectedOptions; trackBy: trackByKey">
+          <app-candlestick-chart [instrumentKey]="k"></app-candlestick-chart>
+        </div>
       </div>
     </div>
   </div>

@@ -58,6 +58,13 @@
   align-items: center;
   gap: 1rem;
 }
+.chip {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
 .token {
   padding: 4px 8px;
   border-radius: 8px;
@@ -92,4 +99,30 @@
 .charts {
   display: grid;
   gap: 1rem;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas: 'main opt1' 'main opt2';
+}
+.main-chart {
+  grid-area: main;
+  height: 400px;
+}
+.opt-chart:nth-child(2) {
+  grid-area: opt1;
+  height: 200px;
+}
+.opt-chart:nth-child(3) {
+  grid-area: opt2;
+  height: 200px;
+}
+@media (max-width: 768px) {
+  .charts {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'main' 'opt1' 'opt2';
+  }
+  .main-chart {
+    height: 300px;
+  }
+  .opt-chart {
+    height: 200px;
+  }
 }
