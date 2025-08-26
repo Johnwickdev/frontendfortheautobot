@@ -15,7 +15,8 @@
         <app-asset-header></app-asset-header>
 
         <div class="panel price-panel">
-          <div class="price-big">24,835.25 ₹</div>
+          <div class="price-big">{{ formatInr(liveLtp) }}</div>
+          <span class="chip-live" *ngIf="showLive">● LIVE</span>
           <div class="muted">24h <span class="rise">+0.68%</span></div>
         </div>
 

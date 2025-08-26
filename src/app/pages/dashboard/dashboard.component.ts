@@ -10,6 +10,8 @@ import { DonutScoreComponent } from './components/donut-score/donut-score.compon
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -50,8 +52,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   remaining = 0;
   polling: any;
   private countdown: any;
+  mainInstrument: string | null = null;
+  liveLtp: number | null = null;
+  private sse: EventSource | null = null;
+  private retry = 1000;
+  private liveTimer: any;
+  showLive = false;
+  private apiBase = environment.apiBase;
 
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService, private http: HttpClient) {}
 
   ngOnInit() {
     this.checkStatus();
@@ -64,11 +73,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     }, 1000);
+    this.http.get<{ mainInstrument: string; options: string[] }>(`${this.apiBase}/md/selection`).subscribe({
+      next: sel => {
+        this.mainInstrument = sel.mainInstrument;
+        if (this.mainInstrument) {
+          this.openSse(this.mainInstrument);
+        }
+      }
+    });
   }
 
   ngOnDestroy() {
     clearInterval(this.polling);
     clearInterval(this.countdown);
+    this.sse?.close();
+    clearTimeout(this.liveTimer);
   }
 
   private checkStatus() {
@@ -91,5 +110,41 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   formatRemaining() {
     return formatCountdown(this.remaining);
+  }
+
+  private openSse(key: string) {
+    this.sse?.close();
+    const url = `${this.apiBase}/md/stream?instrumentKey=${encodeURIComponent(key)}`;
+    const connect = () => {
+      this.sse = new EventSource(url);
+      this.sse.onmessage = ev => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.instrumentKey === this.mainInstrument && typeof data.ltp === 'number') {
+            this.liveLtp = data.ltp;
+            this.showLive = true;
+            clearTimeout(this.liveTimer);
+            this.liveTimer = setTimeout(() => (this.showLive = false), 10000);
+          }
+        } catch {}
+      };
+      this.sse.onerror = () => {
+        this.sse?.close();
+        setTimeout(connect, this.retry);
+        if (this.retry < 10000) this.retry *= 2;
+      };
+    };
+    this.retry = 1000;
+    connect();
+  }
+
+  formatInr(n?: number | null) {
+    return n == null
+      ? '—'
+      : n.toLocaleString('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          maximumFractionDigits: 2,
+        });
   }
 }

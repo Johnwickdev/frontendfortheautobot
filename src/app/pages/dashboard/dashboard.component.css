@@ -75,6 +75,12 @@
   cursor: pointer;
 }
 
+.chip-live {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-left: 8px;
+}
+
 @media (max-width: 1200px) {
   .dashboard {
     margin-left: 0;
