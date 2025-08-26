@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TopbarComponent } from './components/topbar/topbar.component';
 import { SideRailComponent } from './components/side-rail/side-rail.component';
@@ -8,6 +8,8 @@ import { CandlePanelComponent } from './components/candle-panel/candle-panel.com
 import { TradeHistoryComponent } from './components/trade-history/trade-history.component';
 import { DonutScoreComponent } from './components/donut-score/donut-score.component';
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
+import { AuthService } from '../../services/auth.service';
+import { formatCountdown } from '../../utils/time';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,7 +28,7 @@ import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, OnDestroy {
   metrics = [
     { title: 'Total Liquidity', value: '₹ 2,803,805.50' },
     { title: 'Daily Volume', value: '₹ 2,372,139.74' },
@@ -42,4 +44,52 @@ export class DashboardComponent {
     { time: '09:13:10', price: '24,827.00', change: '+0.08%', up: true, amount: '4', fee: '0.20', hash: '0xb2…4a93' },
     { time: '09:10:55', price: '24,823.70', change: '-0.30%', up: false, amount: '2', fee: '0.10', hash: '0xfe…1d2c' }
   ];
+
+  connected = false;
+  expiresAt: string | null = null;
+  remaining = 0;
+  polling: any;
+  private countdown: any;
+
+  constructor(private auth: AuthService) {}
+
+  ngOnInit() {
+    this.checkStatus();
+    this.polling = setInterval(() => this.checkStatus(), 15000);
+    this.countdown = setInterval(() => {
+      if (this.connected && this.remaining > 0) {
+        this.remaining--;
+        if (this.remaining <= 0) {
+          this.connected = false;
+        }
+      }
+    }, 1000);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.polling);
+    clearInterval(this.countdown);
+  }
+
+  private checkStatus() {
+    this.auth.getStatus().subscribe({
+      next: s => {
+        this.connected = s.connected;
+        this.expiresAt = s.expiresAt;
+        this.remaining = s.remainingSeconds;
+      }
+    });
+  }
+
+  login() {
+    this.auth.getLoginUrl().subscribe({ next: url => (window.location.href = url) });
+  }
+
+  refresh() {
+    this.login();
+  }
+
+  formatRemaining() {
+    return formatCountdown(this.remaining);
+  }
 }
