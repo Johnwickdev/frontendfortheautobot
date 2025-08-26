@@ -54,10 +54,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private countdown: any;
   mainInstrument: string | null = null;
   liveLtp: number | null = null;
+  marketClosed = false;
   private sse: EventSource | null = null;
   private retry = 1000;
-  private liveTimer: any;
-  showLive = false;
   private apiBase = environment.apiBase;
 
   constructor(private auth: AuthService, private http: HttpClient) {}
@@ -73,21 +72,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     }, 1000);
-    this.http.get<{ mainInstrument: string; options: string[] }>(`${this.apiBase}/md/selection`).subscribe({
-      next: sel => {
-        this.mainInstrument = sel.mainInstrument;
-        if (this.mainInstrument) {
-          this.openSse(this.mainInstrument);
-        }
-      }
-    });
+    this.http
+      .get<{ mainInstrument: string; options: string[] }>(`${this.apiBase}/md/selection`)
+      .subscribe({
+        next: sel => {
+          this.mainInstrument = sel.mainInstrument;
+          if (this.mainInstrument) {
+            const key = this.mainInstrument;
+            this.http
+              .get<{ ltp: number }>(`${this.apiBase}/md/last-ltp?instrumentKey=${encodeURIComponent(key)}`)
+              .subscribe({
+                next: res => (this.liveLtp = res.ltp),
+                error: () => {},
+                complete: () => this.openSse(key),
+              });
+          }
+        },
+      });
   }
 
   ngOnDestroy() {
     clearInterval(this.polling);
     clearInterval(this.countdown);
     this.sse?.close();
-    clearTimeout(this.liveTimer);
   }
 
   private checkStatus() {
@@ -117,17 +124,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const url = `${this.apiBase}/md/stream?instrumentKey=${encodeURIComponent(key)}`;
     const connect = () => {
       this.sse = new EventSource(url);
-      this.sse.onmessage = ev => {
+      this.marketClosed = false;
+      this.sse.addEventListener('tick', ev => {
         try {
-          const data = JSON.parse(ev.data);
-          if (data.instrumentKey === this.mainInstrument && typeof data.ltp === 'number') {
+          const data = JSON.parse((ev as MessageEvent).data);
+          if (typeof data.ltp === 'number') {
             this.liveLtp = data.ltp;
-            this.showLive = true;
-            clearTimeout(this.liveTimer);
-            this.liveTimer = setTimeout(() => (this.showLive = false), 10000);
           }
         } catch {}
-      };
+      });
+      this.sse.addEventListener('status', ev => {
+        try {
+          const data = JSON.parse((ev as MessageEvent).data);
+          if (typeof data.marketClosed === 'boolean') {
+            this.marketClosed = data.marketClosed;
+          }
+        } catch {}
+      });
+      this.sse.addEventListener('hb', () => {});
       this.sse.onerror = () => {
         this.sse?.close();
         setTimeout(connect, this.retry);
@@ -138,7 +152,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     connect();
   }
 
-  formatInr(n?: number | null) {
+  formatInr(n?: number) {
     return n == null
       ? '—'
       : n.toLocaleString('en-IN', {
