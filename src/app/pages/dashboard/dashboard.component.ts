@@ -1,46 +1,45 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TopbarComponent } from './components/topbar/topbar.component';
-import { KpiCardComponent } from './components/kpi-card/kpi-card.component';
-import { LineCardComponent } from './components/line-card/line-card.component';
-import { ProgressCardComponent } from './components/progress-card/progress-card.component';
-import { TableCardComponent } from './components/table-card/table-card.component';
+import { SideRailComponent } from './components/side-rail/side-rail.component';
+import { AssetHeaderComponent } from './components/asset-header/asset-header.component';
+import { MetricCardComponent } from './components/metric-card/metric-card.component';
+import { CandlePanelComponent } from './components/candle-panel/candle-panel.component';
+import { TradeHistoryComponent } from './components/trade-history/trade-history.component';
+import { DonutScoreComponent } from './components/donut-score/donut-score.component';
+import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, TopbarComponent, KpiCardComponent, LineCardComponent, ProgressCardComponent, TableCardComponent],
+  imports: [
+    CommonModule,
+    TopbarComponent,
+    SideRailComponent,
+    AssetHeaderComponent,
+    MetricCardComponent,
+    CandlePanelComponent,
+    TradeHistoryComponent,
+    DonutScoreComponent,
+    TrustBarComponent
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent {
-  sidebarCollapsed = false;
-
-  kpis = [
-    { title: 'Total income', value: '$348,261', delta: '+1.25%', positive: true, gradient: true },
-    { title: 'Total users', value: '15,708.98', delta: '-5.38%', positive: false, gradient: false },
-    { title: 'Total revenue', value: '7,415.644', delta: '', positive: true, gradient: false },
-    { title: 'Total conversion', value: '10.87%', delta: '+25.45%', positive: true, gradient: false }
+  metrics = [
+    { title: 'Total Liquidity', value: '₹ 2,803,805.50' },
+    { title: 'Daily Volume', value: '₹ 2,372,139.74' },
+    { title: "Open Interest ('000)", value: '120.6' },
+    { title: "Lots Traded ('000)", value: '271.35' }
   ];
 
-  progress = [
-    { flag: '🇺🇸', label: 'United States', value: 85 },
-    { flag: '🇯🇵', label: 'Japan', value: 70 },
-    { flag: '🇮🇩', label: 'Indonesia', value: 45 },
-    { flag: '🇰🇷', label: 'South Korea', value: 38 }
+  trades = [
+    { time: '09:21:30', price: '24,830.10', change: '+0.15%', up: true, amount: '5', fee: '0.25', hash: '0x98…4f1d' },
+    { time: '09:20:11', price: '24,829.50', change: '-0.20%', up: false, amount: '2', fee: '0.10', hash: '0x77…ab32' },
+    { time: '09:18:05', price: '24,831.20', change: '+0.05%', up: true, amount: '1', fee: '0.05', hash: '0xd1…c9e0' },
+    { time: '09:15:42', price: '24,825.90', change: '-0.12%', up: false, amount: '3', fee: '0.15', hash: '0x44…90ac' },
+    { time: '09:13:10', price: '24,827.00', change: '+0.08%', up: true, amount: '4', fee: '0.20', hash: '0xb2…4a93' },
+    { time: '09:10:55', price: '24,823.70', change: '-0.30%', up: false, amount: '2', fee: '0.10', hash: '0xfe…1d2c' }
   ];
-
-  transactions = [
-    { product: 'Macbook Pro M3', category: 'Laptop', amount: '$2,400', date: 'Oct 21, 2024', status: 'Processing', assignee: 'sam@apex.com' },
-    { product: 'iPhone 15 Pro', category: 'Phone', amount: '$1,299', date: 'Oct 21, 2024', status: 'Success', assignee: 'jane@apex.com' },
-    { product: 'AirPods Max', category: 'Headphones', amount: '$549', date: 'Oct 20, 2024', status: 'Declined', assignee: 'tom@apex.com' },
-    { product: 'Surface Book', category: 'Laptop', amount: '$2,100', date: 'Oct 18, 2024', status: 'Processing', assignee: 'anna@apex.com' },
-    { product: 'PlayStation 5', category: 'Console', amount: '$499', date: 'Oct 16, 2024', status: 'Success', assignee: 'joe@apex.com' },
-    { product: 'Dell Monitor', category: 'Monitor', amount: '$299', date: 'Oct 15, 2024', status: 'Processing', assignee: 'lisa@apex.com' }
-  ];
-
-  toggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
 }

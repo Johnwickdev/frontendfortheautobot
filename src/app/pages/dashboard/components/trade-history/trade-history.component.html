@@ -1,0 +1,31 @@
+<div class="history">
+  <h3 class="muted">Trade History</h3>
+  <table class="panel">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Price</th>
+        <th>Change</th>
+        <th>Amount</th>
+        <th>Fee</th>
+        <th>Tx</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of rows">
+        <td>{{r.time}}</td>
+        <td>{{r.price}}</td>
+        <td>
+          <span class="delta" [class.up]="r.up" [class.down]="!r.up">
+            {{r.up ? '▲' : '▼'}} {{r.change}}
+          </span>
+        </td>
+        <td>{{r.amount}}</td>
+        <td>{{r.fee}}</td>
+        <td>{{r.hash}}</td>
+        <td class="kebab">⋮</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

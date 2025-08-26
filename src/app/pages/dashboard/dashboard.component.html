@@ -1,16 +1,30 @@
-<div class="layout" [class.collapsed]="sidebarCollapsed">
-  <app-sidebar [collapsed]="sidebarCollapsed"></app-sidebar>
-  <div class="main">
-    <app-topbar (menu)="toggleSidebar()"></app-topbar>
-    <div class="content">
-      <div class="kpi-row">
-        <app-kpi-card *ngFor="let k of kpis" [title]="k.title" [value]="k.value" [delta]="k.delta" [positive]="k.positive" [gradient]="k.gradient"></app-kpi-card>
+<app-side-rail></app-side-rail>
+<div class="dashboard">
+  <div class="shell">
+    <app-topbar></app-topbar>
+    <div class="main">
+      <div class="left-col">
+        <app-asset-header></app-asset-header>
+
+        <div class="panel price-panel">
+          <div class="price-big">24,835.25 ₹</div>
+          <div class="muted">24h <span class="rise">+0.68%</span></div>
+        </div>
+
+        <div class="metrics">
+          <app-metric-card *ngFor="let m of metrics" [title]="m.title" [value]="m.value"></app-metric-card>
+        </div>
+
+        <div class="bottom">
+          <app-donut-score [value]="97"></app-donut-score>
+          <app-trust-bar [value]="88"></app-trust-bar>
+        </div>
       </div>
-      <div class="middle-row">
-        <app-line-card></app-line-card>
-        <app-progress-card [data]="progress"></app-progress-card>
+
+      <div class="right-col">
+        <app-candle-panel></app-candle-panel>
+        <app-trade-history [rows]="trades"></app-trade-history>
       </div>
-      <app-table-card [data]="transactions"></app-table-card>
     </div>
   </div>
 </div>
