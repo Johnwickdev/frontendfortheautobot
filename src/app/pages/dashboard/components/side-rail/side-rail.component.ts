@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-line-card',
+  selector: 'app-side-rail',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './line-card.component.html',
-  styleUrls: ['./line-card.component.css']
+  templateUrl: './side-rail.component.html',
+  styleUrls: ['./side-rail.component.css']
 })
-export class LineCardComponent {}
+export class SideRailComponent {}

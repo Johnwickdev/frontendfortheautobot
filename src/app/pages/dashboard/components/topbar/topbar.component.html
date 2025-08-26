@@ -1,10 +1,13 @@
 <div class="topbar">
-  <button class="hamburger" (click)="menu.emit()">☰</button>
-  <h1>Dashboard</h1>
-  <div class="spacer"></div>
-  <input class="search" type="text" placeholder="Search" />
-  <button class="date-range">28 Aug – 15 Dec, 2024</button>
-  <button class="btn">Filter</button>
-  <button class="btn">Share</button>
-  <div class="avatar">U</div>
+  <div class="brand">NIFTY / Options <span class="chev">⌄</span></div>
+  <div class="search">
+    <input type="text" placeholder="Search" />
+  </div>
+  <div class="right">
+    <div class="switch pill">
+      <button [class.active]="mode==='chart'" (click)="toggle('chart')">Chart</button>
+      <button [class.active]="mode==='trade'" (click)="toggle('trade')">Trade</button>
+    </div>
+    <div class="avatar pill">U ⌄</div>
+  </div>
 </div>
