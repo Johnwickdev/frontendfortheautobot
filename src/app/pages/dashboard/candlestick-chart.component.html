@@ -2,4 +2,4 @@
   {{instrumentKey}} — LTP: {{nowPrice ?? '—'}}
   <span *ngIf="lastUpdate">({{ lastUpdate | date:'HH:mm:ss' }})</span>
 </div>
-<canvas width="600" height="300"></canvas>
+<canvas [attr.width]="width" [attr.height]="height"></canvas>

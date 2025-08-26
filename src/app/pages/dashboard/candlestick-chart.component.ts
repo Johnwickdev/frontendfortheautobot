@@ -12,6 +12,8 @@ import { Candle, MarketDataService, Tick } from '../../services/market-data.serv
 })
 export class CandlestickChartComponent implements OnInit, OnDestroy {
   @Input() instrumentKey!: string;
+  @Input() width = 600;
+  @Input() height = 300;
   candles: Candle[] = [];
   nowPrice?: number;
   lastUpdate?: Date;

@@ -16,8 +16,9 @@ import { formatCountdown } from '../../utils/time';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   authState?: AuthState;
-  instruments: string[] = [];
-  selected: string[] = [];
+  mainInstrument = 'NIFTY_FUT';
+  options: string[] = [];
+  selectedOptions: string[] = [];
   nowLtp: Record<string, number> = {};
   darkMode = true;
   private sub = new Subscription();
@@ -40,10 +41,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.sub.add(
       this.md.listTracked().subscribe(list => {
-        this.instruments = list;
-        const saved = localStorage.getItem('instruments');
-        this.selected = saved ? JSON.parse(saved) : list;
-        this.md.connect(this.selected);
+        this.options = list.filter(k => k !== this.mainInstrument);
+        const saved = localStorage.getItem('options');
+        this.selectedOptions = saved ? JSON.parse(saved) : this.options;
+        this.md.connect([this.mainInstrument, ...this.selectedOptions]);
       })
     );
 
@@ -55,8 +56,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onSelectionChange() {
-    localStorage.setItem('instruments', JSON.stringify(this.selected));
-    this.md.connect(this.selected);
+    localStorage.setItem('options', JSON.stringify(this.selectedOptions));
+    this.md.connect([this.mainInstrument, ...this.selectedOptions]);
   }
 
   loginWithUpstox(): void {
