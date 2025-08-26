@@ -15,8 +15,10 @@
         <app-asset-header></app-asset-header>
 
         <div class="panel price-panel">
-          <div class="price-big">{{ formatInr(liveLtp) }}</div>
-          <span class="chip-live" *ngIf="showLive">● LIVE</span>
+          <div class="price-big">
+            {{ liveLtp !== null ? formatInr(liveLtp) : '—' }}
+          </div>
+          <span class="chip-live" *ngIf="marketClosed">Market Closed</span>
           <div class="muted">24h <span class="rise">+0.68%</span></div>
         </div>
 
