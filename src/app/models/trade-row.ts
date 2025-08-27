@@ -1,12 +1,14 @@
 export type OptionSide = 'CE' | 'PE' | 'both';
+export type OptionType = 'CE' | 'PE';
+
 export interface TradeRow {
   ts: string;
   instrumentKey: string;
-  optionType: 'CE'|'PE';
+  optionType: OptionType;
   strike: number;
   ltp: number;
-  changePct: number;
-  qty: number;
-  oi: number|null;
+  changePct: number | null;
+  qty: number | null;
+  oi: number | null;
   txId: string;
 }

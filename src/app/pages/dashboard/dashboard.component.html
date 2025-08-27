@@ -36,48 +36,7 @@
 
       <div class="right-col">
         <app-candle-panel></app-candle-panel>
-        <div class="panel sector-panel">
-          <div class="header">
-            <h3>Sector CE/PE</h3>
-            <div class="pill-group">
-              <button [class.active]="sectorSide==='both'" (click)="loadSector('both')">All</button>
-              <button [class.active]="sectorSide==='CE'" (click)="loadSector('CE')">CE</button>
-              <button [class.active]="sectorSide==='PE'" (click)="loadSector('PE')">PE</button>
-            </div>
-          </div>
-          <table class="mini-table" *ngIf="!sectorLoading && sectorRows?.length; else sectorEmpty">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Symbol</th>
-                <th>Price</th>
-                <th>Change</th>
-                <th>Qty</th>
-                <th>OI</th>
-                <th>Tx</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let r of sectorRows; trackBy: trackTx">
-                <td>{{ r.ts | date:'HH:mm:ss' }}</td>
-                <td>{{ r.optionType }} {{ r.strike }}</td>
-                <td>{{ r.ltp | number:'1.2-2' }}</td>
-                <td>
-                  <span [class.up]="r.changePct>0" [class.down]="r.changePct<0">
-                    {{ (r.changePct*100) | number:'1.2-2' }}%
-                  </span>
-                </td>
-                <td>{{ r.qty }}</td>
-                <td>{{ r.oi ?? '—' }}</td>
-                <td class="tx">{{ r.txId }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <ng-template #sectorEmpty>
-            <div class="empty" *ngIf="!sectorLoading">No trades yet</div>
-            <div class="loading" *ngIf="sectorLoading">Loading…</div>
-          </ng-template>
-        </div>
+        <app-sector-table></app-sector-table>
       </div>
     </div>
   </div>

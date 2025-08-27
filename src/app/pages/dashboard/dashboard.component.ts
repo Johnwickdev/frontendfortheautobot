@@ -7,11 +7,11 @@ import { MetricCardComponent } from './components/metric-card/metric-card.compon
 import { CandlePanelComponent } from './components/candle-panel/candle-panel.component';
 import { DonutScoreComponent } from './components/donut-score/donut-score.component';
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
+import { SectorTableComponent } from './components/sector-table/sector-table.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
 import { MarketDataService } from '../../services/market-data.service';
 import { Subscription } from 'rxjs';
-import { OptionSide, TradeRow } from '../../models/trade-row';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +24,8 @@ import { OptionSide, TradeRow } from '../../models/trade-row';
     MetricCardComponent,
     CandlePanelComponent,
     DonutScoreComponent,
-    TrustBarComponent
+    TrustBarComponent,
+    SectorTableComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
@@ -36,11 +37,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { title: "Open Interest ('000)", value: '120.6' },
     { title: "Lots Traded ('000)", value: '271.35' }
   ];
-
-  sectorRows: TradeRow[] = [];
-  sectorLoading = false;
-  sectorSide: OptionSide = 'both';
-  sectorTimer?: any;
 
   connected = false;
   expiresAt: string | null = null;
@@ -85,8 +81,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: () => this.initializeInstrument('NSE_FO|64103'),
       });
     }
-    this.loadSector('both');
-    this.startSectorPolling();
   }
 
   ngOnDestroy() {
@@ -94,7 +88,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     clearInterval(this.countdown);
     clearInterval(this.ltpInterval);
     this.tickSub?.unsubscribe();
-    this.clearSectorPolling();
   }
 
   private checkStatus() {
@@ -157,27 +150,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.ltpInterval = setInterval(load, 5000);
   }
 
-  loadSector(side: OptionSide = this.sectorSide) {
-    this.sectorSide = side;
-    this.sectorLoading = true;
-    this.marketData.getSectorTrades(side, 50).subscribe(rows => {
-      this.sectorRows = rows;
-      this.sectorLoading = false;
-    });
-  }
-
-  startSectorPolling() {
-    this.clearSectorPolling();
-    this.sectorTimer = setInterval(() => this.loadSector(this.sectorSide), 10000);
-  }
-
-  clearSectorPolling() {
-    if (this.sectorTimer) {
-      clearInterval(this.sectorTimer);
-      this.sectorTimer = undefined;
-    }
-  }
-
-  trackTx = (_: number, r: TradeRow) => r.txId;
 
 }
