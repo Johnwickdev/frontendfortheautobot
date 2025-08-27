@@ -1,35 +1,30 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map, shareReplay } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { Observable, timer } from 'rxjs';
+import { map, shareReplay, switchMap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
-export interface Tick {
-  symbol: string;
-  last: number;
-  time: string;
-}
-
+/**
+ * Service to provide the latest NIFTY FUT last traded price (LTP).
+ * Polls the backend `/md/ltp` endpoint every second and shares the
+ * most recent value with all subscribers.  Each poll expects a response
+ * shaped as `{ ltp: number }`.
+ */
 @Injectable({ providedIn: 'root' })
 export class TickService {
+  private http = inject(HttpClient);
+  private apiBase = environment.apiBase;
 
-  private readonly stream$: Observable<Tick>;
+  /** Stream of LTP values refreshed on every poll */
+  private ltp$ = timer(0, 1000).pipe(
+    switchMap(() => this.http.get<{ ltp: number }>(`${this.apiBase}/md/ltp`)),
+    map(res => res.ltp),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
-  constructor(private http: HttpClient) {
-
-    // Server-Sent Events handled as a text stream
-    this.stream$ = new Observable<MessageEvent>(observer => {
-      const sse = new EventSource('/api/stream/ticks');   // proxy to 8081
-      sse.onmessage = ev => observer.next(ev);
-      sse.onerror   = err => observer.error(err);
-      return () => sse.close();
-    }).pipe(
-      map(ev => JSON.parse(ev.data) as Tick),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
-  }
-
-  /** public subscription point */
-  ticks(): Observable<Tick> {
-    return this.stream$;
+  /** Public observable for subscribers */
+  getLtp(): Observable<number> {
+    return this.ltp$;
   }
 }
+

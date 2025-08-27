@@ -10,8 +10,8 @@ import { DonutScoreComponent } from './components/donut-score/donut-score.compon
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { TickService } from '../../services/tick.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -52,14 +52,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   remaining = 0;
   polling: any;
   private countdown: any;
-  mainInstrument: string | null = null;
-  liveLtp: number | null = null;
+  ltp: number | null = null;
   marketClosed = false;
-  private sse: EventSource | null = null;
-  private retry = 1000;
-  private apiBase = environment.apiBase;
 
-  constructor(private auth: AuthService, private http: HttpClient) {}
+  private ltpSub?: Subscription;
+
+  constructor(private auth: AuthService, private tick: TickService) {}
 
   ngOnInit() {
     this.checkStatus();
@@ -72,29 +70,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     }, 1000);
-    this.http
-      .get<{ mainInstrument: string; options: string[] }>(`${this.apiBase}/md/selection`)
-      .subscribe({
-        next: sel => {
-          this.mainInstrument = sel.mainInstrument;
-          if (this.mainInstrument) {
-            const key = this.mainInstrument;
-            this.http
-              .get<{ ltp: number }>(`${this.apiBase}/md/last-ltp?instrumentKey=${encodeURIComponent(key)}`)
-              .subscribe({
-                next: res => (this.liveLtp = res.ltp),
-                error: () => {},
-                complete: () => this.openSse(key),
-              });
-          }
-        },
-      });
+    this.ltpSub = this.tick.getLtp().subscribe(v => (this.ltp = v));
   }
 
   ngOnDestroy() {
     clearInterval(this.polling);
     clearInterval(this.countdown);
-    this.sse?.close();
+    this.ltpSub?.unsubscribe();
   }
 
   private checkStatus() {
@@ -119,46 +101,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return formatCountdown(this.remaining);
   }
 
-  private openSse(key: string) {
-    this.sse?.close();
-    const url = `${this.apiBase}/md/stream?instrumentKey=${encodeURIComponent(key)}`;
-    const connect = () => {
-      this.sse = new EventSource(url);
-      this.marketClosed = false;
-      this.sse.addEventListener('tick', ev => {
-        try {
-          const data = JSON.parse((ev as MessageEvent).data);
-          if (typeof data.ltp === 'number') {
-            this.liveLtp = data.ltp;
-          }
-        } catch {}
-      });
-      this.sse.addEventListener('status', ev => {
-        try {
-          const data = JSON.parse((ev as MessageEvent).data);
-          if (typeof data.marketClosed === 'boolean') {
-            this.marketClosed = data.marketClosed;
-          }
-        } catch {}
-      });
-      this.sse.addEventListener('hb', () => {});
-      this.sse.onerror = () => {
-        this.sse?.close();
-        setTimeout(connect, this.retry);
-        if (this.retry < 10000) this.retry *= 2;
-      };
-    };
-    this.retry = 1000;
-    connect();
-  }
-
-  formatInr(n?: number) {
-    return n == null
-      ? '—'
-      : n.toLocaleString('en-IN', {
-          style: 'currency',
-          currency: 'INR',
-          maximumFractionDigits: 2,
-        });
-  }
 }
