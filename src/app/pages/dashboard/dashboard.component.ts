@@ -10,7 +10,7 @@ import { DonutScoreComponent } from './components/donut-score/donut-score.compon
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
-import { TickService } from '../../services/tick.service';
+import { MarketDataService } from '../../services/market-data.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -52,12 +52,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   remaining = 0;
   polling: any;
   private countdown: any;
-  ltp: number | null = null;
+  nowLtp: number | null = null;
   marketClosed = false;
+  mainInstrument: string | null = null;
 
-  private ltpSub?: Subscription;
+  private tickSub?: Subscription;
 
-  constructor(private auth: AuthService, private tick: TickService) {}
+  constructor(private auth: AuthService, private marketData: MarketDataService) {}
 
   ngOnInit() {
     this.checkStatus();
@@ -70,13 +71,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     }, 1000);
-    this.ltpSub = this.tick.getLtp().subscribe(v => (this.ltp = v));
+    this.fetchLtp();
+    this.tickSub = this.marketData.listenTicks().subscribe(tick => {
+      if (tick.instrumentKey === this.mainInstrument) {
+        this.nowLtp = tick.ltp;
+      }
+    });
   }
 
   ngOnDestroy() {
     clearInterval(this.polling);
     clearInterval(this.countdown);
-    this.ltpSub?.unsubscribe();
+    this.tickSub?.unsubscribe();
   }
 
   private checkStatus() {
@@ -99,6 +105,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   formatRemaining() {
     return formatCountdown(this.remaining);
+  }
+
+  private fetchLtp() {
+    this.marketData.getLtp().subscribe({
+      next: r => {
+        this.nowLtp = r.ltp;
+        this.mainInstrument = r.instrumentKey;
+      },
+      error: err => {
+        if (err.status === 503) {
+          this.nowLtp = null;
+          const delay = 3000 + Math.random() * 2000;
+          setTimeout(() => this.fetchLtp(), delay);
+        }
+      }
+    });
   }
 
 }

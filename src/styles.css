@@ -61,6 +61,12 @@ body {
   letter-spacing: 0.3px;
 }
 
+.price-value {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
 .muted {
   color: var(--muted);
 }
