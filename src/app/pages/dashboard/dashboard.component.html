@@ -36,13 +36,13 @@
 
       <div class="right-col">
         <app-candle-panel></app-candle-panel>
-        <div class="trade-filters">
-          <span class="pill" [class.muted]="filterSide!=='both'" (click)="setFilterSide('both')">All</span>
-          <span class="pill" [class.muted]="filterSide!=='CE'" (click)="setFilterSide('CE')">CE</span>
-          <span class="pill" [class.muted]="filterSide!=='PE'" (click)="setFilterSide('PE')">PE</span>
-        </div>
-        <app-trade-history [rows]="tradeRows" [loading]="loadingTrades"></app-trade-history>
+        <app-trade-history
+          [rows]="tradeRows"
+          [loading]="loadingTrades"
+          [filterSide]="filterSide"
+          (filterSideChange)="setFilterSide($event)"></app-trade-history>
       </div>
     </div>
   </div>
+  <div class="toast" *ngIf="toast">{{ toast }}</div>
 </div>

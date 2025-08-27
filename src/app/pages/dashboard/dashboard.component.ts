@@ -43,6 +43,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   tradeRows: TradeRow[] = [];
   tradePolling?: Subscription;
   loadingTrades = false;
+  toast: string | null = null;
 
   connected = false;
   expiresAt: string | null = null;
@@ -88,8 +89,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: () => this.initializeInstrument('NSE_FO|64103'),
       });
     }
-    this.loadTradeHistory();
-    this.tradePolling = interval(10000).subscribe(() => this.loadTradeHistory());
+    this.loadSectorTrades();
+    this.tradePolling = interval(10000).subscribe(() => this.loadSectorTrades());
     this.tradeSub = this.marketData.listenTrades().subscribe(t => {
       if (this.filterSide !== 'both' && t.optionType !== this.filterSide) return;
       if (this.tradeRows.find(r => r.txId === t.txId)) return;
@@ -171,17 +172,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.filterSide === side) return;
     this.filterSide = side;
     this.tradePolling?.unsubscribe();
-    this.loadTradeHistory();
-    this.tradePolling = interval(10000).subscribe(() => this.loadTradeHistory());
+    this.loadSectorTrades();
+    this.tradePolling = interval(10000).subscribe(() => this.loadSectorTrades());
   }
 
-  private loadTradeHistory() {
+  private loadSectorTrades() {
     if (!this.connected) {
       this.tradeRows = [];
       return;
     }
     this.loadingTrades = true;
-    this.marketData.getTradeHistory({ limit: 50, side: this.filterSide }).subscribe({
+    this.marketData.getSectorTrades({ limit: 50, side: this.filterSide }).subscribe({
       next: res => {
         this.loadingTrades = false;
         if (res.status === 200) {
@@ -192,10 +193,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loadingTrades = false;
-        console.warn('Retrying...');
-        setTimeout(() => this.loadTradeHistory(), 10000);
+        this.showToast('Retrying…');
+        setTimeout(() => this.loadSectorTrades(), 10000);
       },
     });
+  }
+
+  private showToast(msg: string) {
+    this.toast = msg;
+    setTimeout(() => (this.toast = null), 3000);
   }
 
   private normalize(rows: TradeRow[]): TradeRow[] {

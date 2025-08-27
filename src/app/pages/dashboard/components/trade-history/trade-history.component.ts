@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TradeRow } from '../../../../models/trade-history.model';
 
@@ -12,4 +12,6 @@ import { TradeRow } from '../../../../models/trade-history.model';
 export class TradeHistoryComponent {
   @Input() rows: TradeRow[] = [];
   @Input() loading = false;
+  @Input() filterSide: 'both' | 'CE' | 'PE' = 'both';
+  @Output() filterSideChange = new EventEmitter<'both' | 'CE' | 'PE'>();
 }
