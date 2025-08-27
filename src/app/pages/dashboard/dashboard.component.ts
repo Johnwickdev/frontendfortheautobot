@@ -5,14 +5,13 @@ import { SideRailComponent } from './components/side-rail/side-rail.component';
 import { AssetHeaderComponent } from './components/asset-header/asset-header.component';
 import { MetricCardComponent } from './components/metric-card/metric-card.component';
 import { CandlePanelComponent } from './components/candle-panel/candle-panel.component';
-import { TradeHistoryComponent } from './components/trade-history/trade-history.component';
 import { DonutScoreComponent } from './components/donut-score/donut-score.component';
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
 import { MarketDataService } from '../../services/market-data.service';
-import { Subscription, interval } from 'rxjs';
-import { TradeRow } from '../../models/trade-history.model';
+import { Subscription } from 'rxjs';
+import { OptionSide, TradeRow } from '../../models/trade-row';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +23,6 @@ import { TradeRow } from '../../models/trade-history.model';
     AssetHeaderComponent,
     MetricCardComponent,
     CandlePanelComponent,
-    TradeHistoryComponent,
     DonutScoreComponent,
     TrustBarComponent
   ],
@@ -39,11 +37,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { title: "Lots Traded ('000)", value: '271.35' }
   ];
 
-  filterSide: 'both' | 'CE' | 'PE' = 'both';
-  tradeRows: TradeRow[] = [];
-  tradePolling?: Subscription;
-  loadingTrades = false;
-  toast: string | null = null;
+  sectorRows: TradeRow[] = [];
+  sectorLoading = false;
+  sectorSide: OptionSide = 'both';
+  sectorTimer?: any;
 
   connected = false;
   expiresAt: string | null = null;
@@ -58,7 +55,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   mainInstrument: string | null = null;
 
   private tickSub?: Subscription;
-  private tradeSub?: Subscription;
 
   constructor(private auth: AuthService, private marketData: MarketDataService) {}
 
@@ -89,14 +85,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: () => this.initializeInstrument('NSE_FO|64103'),
       });
     }
-    this.loadSectorTrades();
-    this.tradePolling = interval(10000).subscribe(() => this.loadSectorTrades());
-    this.tradeSub = this.marketData.listenTrades().subscribe(t => {
-      if (this.filterSide !== 'both' && t.optionType !== this.filterSide) return;
-      if (this.tradeRows.find(r => r.txId === t.txId)) return;
-      this.tradeRows.unshift(t);
-      this.tradeRows = this.normalize(this.tradeRows);
-    });
+    this.loadSector('both');
+    this.startSectorPolling();
   }
 
   ngOnDestroy() {
@@ -104,8 +94,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     clearInterval(this.countdown);
     clearInterval(this.ltpInterval);
     this.tickSub?.unsubscribe();
-    this.tradeSub?.unsubscribe();
-    this.tradePolling?.unsubscribe();
+    this.clearSectorPolling();
   }
 
   private checkStatus() {
@@ -168,46 +157,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.ltpInterval = setInterval(load, 5000);
   }
 
-  setFilterSide(side: 'both' | 'CE' | 'PE') {
-    if (this.filterSide === side) return;
-    this.filterSide = side;
-    this.tradePolling?.unsubscribe();
-    this.loadSectorTrades();
-    this.tradePolling = interval(10000).subscribe(() => this.loadSectorTrades());
-  }
-
-  private loadSectorTrades() {
-    if (!this.connected) {
-      this.tradeRows = [];
-      return;
-    }
-    this.loadingTrades = true;
-    this.marketData.getSectorTrades({ limit: 50, side: this.filterSide }).subscribe({
-      next: res => {
-        this.loadingTrades = false;
-        if (res.status === 200) {
-          this.tradeRows = this.normalize(res.body || []);
-        } else if (res.status === 204) {
-          this.tradeRows = [];
-        }
-      },
-      error: () => {
-        this.loadingTrades = false;
-        this.showToast('Retrying…');
-        setTimeout(() => this.loadSectorTrades(), 10000);
-      },
+  loadSector(side: OptionSide = this.sectorSide) {
+    this.sectorSide = side;
+    this.sectorLoading = true;
+    this.marketData.getSectorTrades(side, 50).subscribe(rows => {
+      this.sectorRows = rows;
+      this.sectorLoading = false;
     });
   }
 
-  private showToast(msg: string) {
-    this.toast = msg;
-    setTimeout(() => (this.toast = null), 3000);
+  startSectorPolling() {
+    this.clearSectorPolling();
+    this.sectorTimer = setInterval(() => this.loadSector(this.sectorSide), 10000);
   }
 
-  private normalize(rows: TradeRow[]): TradeRow[] {
-    return rows
-      .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
-      .slice(0, 100);
+  clearSectorPolling() {
+    if (this.sectorTimer) {
+      clearInterval(this.sectorTimer);
+      this.sectorTimer = undefined;
+    }
   }
+
+  trackTx = (_: number, r: TradeRow) => r.txId;
 
 }
