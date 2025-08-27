@@ -38,8 +38,15 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
   margin-right: 4px;
+}
+
+.price-panel .dot-live {
+  background: var(--rise);
+}
+
+.price-panel .dot-influx {
+  background: var(--muted);
 }
 
 .metrics {

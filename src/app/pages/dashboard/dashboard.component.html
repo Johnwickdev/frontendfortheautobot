@@ -18,8 +18,8 @@
           <div class="price-value">
             {{ nowLtp === null ? '—' : (nowLtp | number:'1.2-2') }}
           </div>
-          <small *ngIf="ltpSource==='influx'">Last Saved · {{ ltpTs | date:'short' }}</small>
-          <small *ngIf="ltpSource==='live'"><span class="dot"></span>Live</small>
+          <small *ngIf="ltpSource==='live'"><span class="dot dot-live"></span>Live</small>
+          <small *ngIf="ltpSource==='influx'"><span class="dot dot-influx"></span>Last saved</small>
           <span class="chip-live" *ngIf="marketOpen === false">Market Closed</span>
           <div class="muted">24h <span class="rise">+0.68%</span></div>
         </div>
