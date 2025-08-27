@@ -33,6 +33,18 @@ export class MarketDataService {
   private delays = [1000, 2000, 5000, 10000];
   private delayIndex = 0;
 
+  /** fetch current LTP for the main instrument */
+  getLtp() {
+    return this.http.get<{ instrumentKey: string; ltp: number; timestamp: string }>(
+      `${this.apiBase}/md/ltp`
+    );
+  }
+
+  /** public observable to listen for tick updates */
+  listenTicks() {
+    return this.ticks$;
+  }
+
   /** fetch selection of main instrument and options */
   getSelection(): Observable<{ mainInstrument: string; options: string[] } | null> {
     return this.http
