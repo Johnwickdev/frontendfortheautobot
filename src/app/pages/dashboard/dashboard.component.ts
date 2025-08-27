@@ -53,7 +53,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   polling: any;
   private countdown: any;
   nowLtp: number | null = null;
-  marketClosed = false;
+  ltpTs?: string;
+  ltpSource?: 'live' | 'influx';
+  marketOpen?: boolean;
   mainInstrument: string | null = null;
 
   private tickSub?: Subscription;
@@ -75,6 +77,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.tickSub = this.marketData.listenTicks().subscribe(tick => {
       if (tick.instrumentKey === this.mainInstrument && tick.ltp != null) {
         this.nowLtp = tick.ltp;
+        this.ltpSource = 'live';
+        this.marketOpen = true;
+        this.ltpTs = new Date().toISOString();
       }
     });
   }
@@ -110,11 +115,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private fetchLtp() {
     this.marketData.getLtp().subscribe({
       next: r => {
+        if (!r || r.ltp == null) {
+          setTimeout(() => this.fetchLtp(), 5000);
+          return;
+        }
         this.nowLtp = r.ltp;
+        this.ltpTs = r.timestamp;
+        this.ltpSource = r.source;
+        this.marketOpen = r.marketOpen;
         this.mainInstrument = r.instrumentKey;
       },
       error: err => {
-        if (err.status === 503) {
+        if (err.status === 503 || err.status === 204) {
           this.nowLtp = null;
           setTimeout(() => this.fetchLtp(), 5000);
         }
