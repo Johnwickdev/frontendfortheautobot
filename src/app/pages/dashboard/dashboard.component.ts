@@ -73,7 +73,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }, 1000);
     this.fetchLtp();
     this.tickSub = this.marketData.listenTicks().subscribe(tick => {
-      if (tick.instrumentKey === this.mainInstrument) {
+      if (tick.instrumentKey === this.mainInstrument && tick.ltp != null) {
         this.nowLtp = tick.ltp;
       }
     });
@@ -116,8 +116,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       error: err => {
         if (err.status === 503) {
           this.nowLtp = null;
-          const delay = 3000 + Math.random() * 2000;
-          setTimeout(() => this.fetchLtp(), delay);
+          setTimeout(() => this.fetchLtp(), 5000);
         }
       }
     });
