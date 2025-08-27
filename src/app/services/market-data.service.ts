@@ -1,6 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, of, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Candle {
@@ -33,15 +33,18 @@ export class MarketDataService {
   private delays = [1000, 2000, 5000, 10000];
   private delayIndex = 0;
 
-  /** fetch current LTP for the main instrument */
-  getLtp() {
-    return this.http.get<{
-      instrumentKey: string;
-      ltp: number;
-      timestamp: string;
-      marketOpen: boolean;
-      source: 'live' | 'influx';
-    }>(`${this.apiBase}/md/ltp`);
+  /** fetch current LTP for the given instrument */
+  getLtp(key: string) {
+    return this.http
+      .get<{
+        instrumentKey: string;
+        ltp: number;
+        ts: string;
+        source: 'live' | 'influx';
+      }>(`${this.apiBase}/md/ltp?instrumentKey=${encodeURIComponent(key)}`, {
+        observe: 'response',
+      })
+      .pipe(map(res => (res.status === 204 ? null : res.body || null)));
   }
 
   /** public observable to listen for tick updates */

@@ -52,6 +52,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   remaining = 0;
   polling: any;
   private countdown: any;
+  private ltpInterval: any;
   nowLtp: number | null = null;
   ltpTs?: string;
   ltpSource?: 'live' | 'influx';
@@ -73,20 +74,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     }, 1000);
-    this.fetchLtp();
-    this.tickSub = this.marketData.listenTicks().subscribe(tick => {
-      if (tick.instrumentKey === this.mainInstrument && tick.ltp != null) {
-        this.nowLtp = tick.ltp;
-        this.ltpSource = 'live';
-        this.marketOpen = true;
-        this.ltpTs = new Date().toISOString();
-      }
-    });
+    const stored = localStorage.getItem('mainInstrumentKey');
+    if (stored) {
+      this.initializeInstrument(stored);
+    } else {
+      this.marketData.getSelection().subscribe({
+        next: sel => {
+          if (sel?.mainInstrument) {
+            localStorage.setItem('mainInstrumentKey', sel.mainInstrument);
+            this.initializeInstrument(sel.mainInstrument);
+          }
+        },
+      });
+    }
   }
 
   ngOnDestroy() {
     clearInterval(this.polling);
     clearInterval(this.countdown);
+    clearInterval(this.ltpInterval);
     this.tickSub?.unsubscribe();
   }
 
@@ -112,26 +118,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return formatCountdown(this.remaining);
   }
 
-  private fetchLtp() {
-    this.marketData.getLtp().subscribe({
-      next: r => {
-        if (!r || r.ltp == null) {
-          setTimeout(() => this.fetchLtp(), 5000);
-          return;
-        }
-        this.nowLtp = r.ltp;
-        this.ltpTs = r.timestamp;
-        this.ltpSource = r.source;
-        this.marketOpen = r.marketOpen;
-        this.mainInstrument = r.instrumentKey;
-      },
-      error: err => {
-        if (err.status === 503 || err.status === 204) {
-          this.nowLtp = null;
-          setTimeout(() => this.fetchLtp(), 5000);
-        }
+  private initializeInstrument(key: string) {
+    this.mainInstrument = key;
+    this.startLtpPolling();
+    this.tickSub = this.marketData.listenTicks().subscribe(tick => {
+      if (tick.instrumentKey === this.mainInstrument && tick.ltp != null) {
+        this.nowLtp = tick.ltp;
+        this.ltpSource = 'live';
+        this.ltpTs = new Date().toISOString();
       }
     });
+  }
+
+  private startLtpPolling() {
+    const load = () => {
+      if (!this.mainInstrument) return;
+      this.marketData.getLtp(this.mainInstrument).subscribe({
+        next: r => {
+          if (!r || r.ltp == null) {
+            this.nowLtp = null;
+            this.ltpSource = undefined;
+            this.ltpTs = undefined;
+            return;
+          }
+          this.nowLtp = r.ltp;
+          this.ltpSource = r.source;
+          this.ltpTs = r.ts;
+        },
+        error: () => {},
+      });
+    };
+    load();
+    this.ltpInterval = setInterval(load, 5000);
   }
 
 }
