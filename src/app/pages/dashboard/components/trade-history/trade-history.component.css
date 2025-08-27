@@ -2,8 +2,26 @@
   margin-top: 24px;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 h3 {
-  margin: 0 0 12px 4px;
+  margin: 0 0 0 4px;
+}
+
+.trade-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.trade-filters .pill {
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
 }
 
 table {
@@ -39,13 +57,3 @@ tbody td {
   color: var(--fall);
 }
 
-.kebab {
-  text-align: center;
-  width: 20px;
-  cursor: pointer;
-}
-
-.pill {
-  font-size: 11px;
-  padding: 2px 6px;
-}

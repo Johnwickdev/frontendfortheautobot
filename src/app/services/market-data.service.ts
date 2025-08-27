@@ -72,11 +72,11 @@ export class MarketDataService {
     return this.http.get<Candle[]>(`${this.apiBase}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
   }
 
-  getTradeHistory(params: { limit?: number; side?: 'CE' | 'PE' | 'both' } = {}) {
+  getSectorTrades(params: { limit?: number; side?: 'CE' | 'PE' | 'both' } = {}) {
     const p = new HttpParams()
       .set('limit', String(params.limit ?? 50))
       .set('side', params.side ?? 'both');
-    return this.http.get<TradeRow[]>(`${this.apiBase}/md/trade-history`, {
+    return this.http.get<TradeRow[]>(`${this.apiBase}/md/sector-trades`, {
       params: p,
       observe: 'response',
     });
