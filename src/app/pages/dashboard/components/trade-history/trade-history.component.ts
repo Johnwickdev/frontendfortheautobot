@@ -1,15 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface TradeRow {
-  time: string;
-  price: string;
-  change: string;
-  up: boolean;
-  amount: string;
-  fee: string;
-  hash: string;
-}
+import { TradeRow } from '../../../../models/trade-history.model';
 
 @Component({
   selector: 'app-trade-history',
@@ -20,4 +11,5 @@ interface TradeRow {
 })
 export class TradeHistoryComponent {
   @Input() rows: TradeRow[] = [];
+  @Input() loading = false;
 }

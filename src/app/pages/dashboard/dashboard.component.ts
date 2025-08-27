@@ -11,7 +11,8 @@ import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
 import { MarketDataService } from '../../services/market-data.service';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
+import { TradeRow } from '../../models/trade-history.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -38,14 +39,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { title: "Lots Traded ('000)", value: '271.35' }
   ];
 
-  trades = [
-    { time: '09:21:30', price: '24,830.10', change: '+0.15%', up: true, amount: '5', fee: '0.25', hash: '0x98…4f1d' },
-    { time: '09:20:11', price: '24,829.50', change: '-0.20%', up: false, amount: '2', fee: '0.10', hash: '0x77…ab32' },
-    { time: '09:18:05', price: '24,831.20', change: '+0.05%', up: true, amount: '1', fee: '0.05', hash: '0xd1…c9e0' },
-    { time: '09:15:42', price: '24,825.90', change: '-0.12%', up: false, amount: '3', fee: '0.15', hash: '0x44…90ac' },
-    { time: '09:13:10', price: '24,827.00', change: '+0.08%', up: true, amount: '4', fee: '0.20', hash: '0xb2…4a93' },
-    { time: '09:10:55', price: '24,823.70', change: '-0.30%', up: false, amount: '2', fee: '0.10', hash: '0xfe…1d2c' }
-  ];
+  filterSide: 'both' | 'CE' | 'PE' = 'both';
+  tradeRows: TradeRow[] = [];
+  tradePolling?: Subscription;
+  loadingTrades = false;
 
   connected = false;
   expiresAt: string | null = null;
@@ -60,6 +57,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   mainInstrument: string | null = null;
 
   private tickSub?: Subscription;
+  private tradeSub?: Subscription;
 
   constructor(private auth: AuthService, private marketData: MarketDataService) {}
 
@@ -90,6 +88,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: () => this.initializeInstrument('NSE_FO|64103'),
       });
     }
+    this.loadTradeHistory();
+    this.tradePolling = interval(10000).subscribe(() => this.loadTradeHistory());
+    this.tradeSub = this.marketData.listenTrades().subscribe(t => {
+      if (this.filterSide !== 'both' && t.optionType !== this.filterSide) return;
+      if (this.tradeRows.find(r => r.txId === t.txId)) return;
+      this.tradeRows.unshift(t);
+      this.tradeRows = this.normalize(this.tradeRows);
+    });
   }
 
   ngOnDestroy() {
@@ -97,6 +103,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     clearInterval(this.countdown);
     clearInterval(this.ltpInterval);
     this.tickSub?.unsubscribe();
+    this.tradeSub?.unsubscribe();
+    this.tradePolling?.unsubscribe();
   }
 
   private checkStatus() {
@@ -157,6 +165,43 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
     load();
     this.ltpInterval = setInterval(load, 5000);
+  }
+
+  setFilterSide(side: 'both' | 'CE' | 'PE') {
+    if (this.filterSide === side) return;
+    this.filterSide = side;
+    this.tradePolling?.unsubscribe();
+    this.loadTradeHistory();
+    this.tradePolling = interval(10000).subscribe(() => this.loadTradeHistory());
+  }
+
+  private loadTradeHistory() {
+    if (!this.connected) {
+      this.tradeRows = [];
+      return;
+    }
+    this.loadingTrades = true;
+    this.marketData.getTradeHistory({ limit: 50, side: this.filterSide }).subscribe({
+      next: res => {
+        this.loadingTrades = false;
+        if (res.status === 200) {
+          this.tradeRows = this.normalize(res.body || []);
+        } else if (res.status === 204) {
+          this.tradeRows = [];
+        }
+      },
+      error: () => {
+        this.loadingTrades = false;
+        console.warn('Retrying...');
+        setTimeout(() => this.loadTradeHistory(), 10000);
+      },
+    });
+  }
+
+  private normalize(rows: TradeRow[]): TradeRow[] {
+    return rows
+      .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
+      .slice(0, 100);
   }
 
 }

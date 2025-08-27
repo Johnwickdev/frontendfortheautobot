@@ -28,6 +28,18 @@
   gap: 24px;
 }
 
+.trade-filters {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px 4px;
+}
+
+.trade-filters .pill {
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
 .price-panel {
   text-align: center;
   padding: 24px 16px;
