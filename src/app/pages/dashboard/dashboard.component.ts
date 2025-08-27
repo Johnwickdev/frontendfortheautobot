@@ -83,8 +83,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (sel?.mainInstrument) {
             localStorage.setItem('mainInstrumentKey', sel.mainInstrument);
             this.initializeInstrument(sel.mainInstrument);
+          } else {
+            this.initializeInstrument('NSE_FO|64103');
           }
         },
+        error: () => this.initializeInstrument('NSE_FO|64103'),
       });
     }
   }
@@ -145,7 +148,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.ltpSource = r.source;
           this.ltpTs = r.ts;
         },
-        error: () => {},
+        error: () => {
+          this.nowLtp = null;
+          this.ltpSource = undefined;
+          this.ltpTs = undefined;
+        },
       });
     };
     load();
