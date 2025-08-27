@@ -33,6 +33,15 @@
   padding: 24px 16px;
 }
 
+.price-panel .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 4px;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
