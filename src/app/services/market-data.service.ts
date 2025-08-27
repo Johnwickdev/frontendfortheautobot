@@ -1,7 +1,8 @@
 import { Injectable, NgZone, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, catchError, of, map } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { TradeRow } from '../models/trade-history.model';
 
 export interface Candle {
   time: string; // ISO timestamp of minute start
@@ -27,9 +28,11 @@ export class MarketDataService {
 
   private sse: EventSource | null = null;
   private tickSub = new Subject<Tick>();
+  private tradeSub = new Subject<TradeRow>();
   private connectionStatus = new BehaviorSubject<boolean>(false);
   connection$ = this.connectionStatus.asObservable();
   ticks$ = this.tickSub.asObservable();
+  trades$ = this.tradeSub.asObservable();
   private delays = [1000, 2000, 5000, 10000];
   private delayIndex = 0;
 
@@ -52,6 +55,11 @@ export class MarketDataService {
     return this.ticks$;
   }
 
+  /** public observable to listen for trade updates */
+  listenTrades() {
+    return this.trades$;
+  }
+
   /** fetch selection of main instrument and options */
   getSelection(): Observable<{ mainInstrument: string; options: string[] } | null> {
     return this.http
@@ -62,6 +70,16 @@ export class MarketDataService {
   /** load historical candles */
   getCandles(key: string): Observable<Candle[]> {
     return this.http.get<Candle[]>(`${this.apiBase}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
+  }
+
+  getTradeHistory(params: { limit?: number; side?: 'CE' | 'PE' | 'both' } = {}) {
+    const p = new HttpParams()
+      .set('limit', String(params.limit ?? 50))
+      .set('side', params.side ?? 'both');
+    return this.http.get<TradeRow[]>(`${this.apiBase}/md/trade-history`, {
+      params: p,
+      observe: 'response',
+    });
   }
 
   /** connect to the streaming endpoint for the selected instruments */
@@ -81,6 +99,14 @@ export class MarketDataService {
           } catch (e) {}
         });
       };
+      this.sse.addEventListener('trade', ev => {
+        this.zone.run(() => {
+          try {
+            const t = JSON.parse((ev as MessageEvent).data) as TradeRow;
+            this.tradeSub.next(t);
+          } catch (e) {}
+        });
+      });
       this.sse.onerror = () => {
         this.connectionStatus.next(false);
         this.sse?.close();
