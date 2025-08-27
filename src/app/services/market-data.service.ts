@@ -35,9 +35,13 @@ export class MarketDataService {
 
   /** fetch current LTP for the main instrument */
   getLtp() {
-    return this.http.get<{ instrumentKey: string; ltp: number; timestamp: string }>(
-      `${this.apiBase}/md/ltp`
-    );
+    return this.http.get<{
+      instrumentKey: string;
+      ltp: number;
+      timestamp: string;
+      marketOpen: boolean;
+      source: 'live' | 'influx';
+    }>(`${this.apiBase}/md/ltp`);
   }
 
   /** public observable to listen for tick updates */
