@@ -4,6 +4,17 @@ import { BehaviorSubject, Observable, Subject, catchError, of, map } from 'rxjs'
 import { environment } from '../../environments/environment';
 import { TradeRow } from '../models/trade-row';
 
+export interface SectorTradeRow {
+  ts: string;
+  optionType: 'CE' | 'PE';
+  strike: number;
+  ltp: number;
+  changePct?: number | null;
+  qty?: number | null;
+  oi?: number | null;
+  iv?: number | null;
+}
+
 export interface Candle {
   time: string; // ISO timestamp of minute start
   open: number;
@@ -72,9 +83,32 @@ export class MarketDataService {
     return this.http.get<Candle[]>(`${this.apiBase}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
   }
 
-  getSectorTrades(limit = 50, side: 'both' | 'CE' | 'PE' = 'both'): Observable<TradeRow[]> {
+  getSectorTrades(side: 'both' | 'CE' | 'PE' = 'both', limit = 50): Observable<{ rows: SectorTradeRow[]; source?: 'live' | 'influx' }> {
     const params = new HttpParams().set('limit', limit).set('side', side);
-    return this.http.get<TradeRow[]>(`${environment.apiBase}/md/sector-trades`, { params });
+    return this.http
+      .get<SectorTradeRow[]>(`${this.apiBase}/md/sector-trades`, { params, observe: 'response' })
+      .pipe(
+        map(res => {
+          const header = res.headers.get('X-Source');
+          const rows = (res.body || []).sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+          let source: 'live' | 'influx' | undefined;
+          if (header === 'live' || header === 'influx') {
+            source = header;
+          } else {
+            const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            const mins = istNow.getHours() * 60 + istNow.getMinutes();
+            const within = mins >= 9 * 60 + 15 && mins <= 15 * 60 + 30;
+            if (within) {
+              const now = Date.now();
+              if (rows.some(r => now - new Date(r.ts).getTime() <= 60000)) {
+                source = 'live';
+              }
+            }
+            if (!source) source = 'influx';
+          }
+          return { rows, source };
+        })
+      );
   }
 
   /** connect to the streaming endpoint for the selected instruments */

@@ -7,7 +7,7 @@ import { MetricCardComponent } from './components/metric-card/metric-card.compon
 import { CandlePanelComponent } from './components/candle-panel/candle-panel.component';
 import { DonutScoreComponent } from './components/donut-score/donut-score.component';
 import { TrustBarComponent } from './components/trust-bar/trust-bar.component';
-import { SectorTableComponent } from './components/sector-table/sector-table.component';
+import { SectorTradesComponent } from './sector-trades.component';
 import { AuthService } from '../../services/auth.service';
 import { formatCountdown } from '../../utils/time';
 import { MarketDataService } from '../../services/market-data.service';
@@ -25,7 +25,7 @@ import { Subscription } from 'rxjs';
     CandlePanelComponent,
     DonutScoreComponent,
     TrustBarComponent,
-    SectorTableComponent
+    SectorTradesComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
