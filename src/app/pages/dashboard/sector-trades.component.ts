@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { interval, Subscription } from 'rxjs';
 import { MarketDataService, SectorTradeRow } from '../../services/market-data.service';
 
 type Side = 'both' | 'CE' | 'PE';
@@ -11,12 +12,14 @@ type Side = 'both' | 'CE' | 'PE';
   templateUrl: './sector-trades.component.html',
   styleUrls: ['./sector-trades.component.css']
 })
-export class SectorTradesComponent implements OnInit {
+export class SectorTradesComponent implements OnInit, OnDestroy {
   side: Side = 'both';
   rows: SectorTradeRow[] = [];
   loading = false;
   error?: string;
   source?: 'live' | 'influx';
+
+  private timer?: Subscription;
 
   constructor(private marketData: MarketDataService) {}
 
@@ -26,6 +29,11 @@ export class SectorTradesComponent implements OnInit {
       this.side = stored;
     }
     this.fetch(this.side);
+    this.timer = interval(5000).subscribe(() => this.fetch(this.side));
+  }
+
+  ngOnDestroy() {
+    this.timer?.unsubscribe();
   }
 
   setSide(side: Side) {
