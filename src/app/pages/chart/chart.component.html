@@ -1,0 +1,88 @@
+<div class="chart-page shell" *ngIf="instrumentKey() as key">
+  <header class="chart-header">
+    <div>
+      <h2>{{ instrumentDisplay() }}</h2>
+      <p class="subtitle">{{ key }}</p>
+    </div>
+    <div class="status">
+      <span class="dot" [class.connected]="wsState() === 'connected'" [class.connecting]="wsState() === 'connecting'"></span>
+      <span>{{ wsState() | titlecase }}</span>
+    </div>
+  </header>
+  <div class="toolbar">
+    <label>Timeframe</label>
+    <div class="tf-options">
+      <button
+        *ngFor="let tf of timeframeOptions"
+        type="button"
+        [class.active]="timeframe() === tf"
+        (click)="changeTimeframe(tf)"
+      >
+        {{ tf }}
+      </button>
+    </div>
+  </div>
+  <div class="history" *ngIf="historyLoading()">
+    <span class="spinner"></span>
+    <span>Loading history…</span>
+  </div>
+  <p class="error" *ngIf="historyError()">{{ historyError() }}</p>
+  <div class="chart-area" *ngIf="!historyLoading() && candleShapes().length">
+    <svg [attr.viewBox]="'0 0 ' + chartWidth() + ' ' + chartHeight()">
+      <ng-container *ngFor="let candle of candleShapes()">
+        <line
+          [attr.x1]="candle.x + candle.width / 2"
+          [attr.x2]="candle.x + candle.width / 2"
+          [attr.y1]="candle.wickTop"
+          [attr.y2]="candle.wickBottom"
+          stroke="#94a3b8"
+          stroke-width="1"
+        ></line>
+        <rect
+          [attr.x]="candle.x"
+          [attr.y]="candle.bodyTop"
+          [attr.width]="candle.width"
+          [attr.height]="candle.bodyHeight"
+          [attr.fill]="candle.color"
+          rx="3"
+        ></rect>
+      </ng-container>
+    </svg>
+  </div>
+  <section class="info-grid">
+    <div class="panel info">
+      <h3>Last tick</h3>
+      <p *ngIf="latestTick(); else noTick">
+        Price: <strong>{{ latestTick()?.ltp | number: '1.2-2' }}</strong>
+        <span class="muted">&#64; {{ latestTick()?.ts | date: 'mediumTime' }}</span>
+      </p>
+      <ng-template #noTick>
+        <p class="muted">Waiting for live data…</p>
+      </ng-template>
+    </div>
+    <div class="panel orderbook">
+      <h3>Top of book</h3>
+      <table *ngIf="bidAskLevels()?.length; else emptyBook">
+        <thead>
+          <tr>
+            <th>Bid</th>
+            <th>Qty</th>
+            <th>Ask</th>
+            <th>Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let lvl of bidAskLevels()">
+            <td class="rise">{{ lvl.bidP | number: '1.2-2' }}</td>
+            <td>{{ lvl.bidQ }}</td>
+            <td class="fall">{{ lvl.askP | number: '1.2-2' }}</td>
+            <td>{{ lvl.askQ }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #emptyBook>
+        <p class="muted">Bid/ask not available.</p>
+      </ng-template>
+    </div>
+  </section>
+</div>

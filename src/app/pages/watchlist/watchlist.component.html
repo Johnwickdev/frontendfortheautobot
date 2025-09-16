@@ -1,0 +1,18 @@
+<div class="watchlist shell">
+  <header>
+    <h2>Your watchlist</h2>
+    <a class="ghost" routerLink="/search">Add instruments</a>
+  </header>
+  <ng-container *ngIf="items$ | async as items">
+    <p class="hint" *ngIf="!items.length">No instruments added yet. Search to add your favourites.</p>
+    <div class="items" *ngIf="items.length">
+      <div class="item" *ngFor="let item of items" (click)="openChart(item)">
+        <div class="symbol">
+          <span class="name">{{ item.display }}</span>
+          <span class="meta">{{ item.segment }} · {{ item.symbol }}</span>
+        </div>
+        <button class="remove" type="button" (click)="remove(item, $event)">Remove</button>
+      </div>
+    </div>
+  </ng-container>
+</div>

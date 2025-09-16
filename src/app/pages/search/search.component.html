@@ -1,0 +1,44 @@
+<div class="search-shell shell">
+  <h2>Find instruments</h2>
+  <form class="search-form" (ngSubmit)="performSearch()">
+    <input
+      type="search"
+      placeholder="Search by symbol or name"
+      [ngModel]="query()"
+      name="query"
+      (ngModelChange)="query.set($event)"
+    />
+    <button class="pill" type="submit" [disabled]="!canSearch()">Search</button>
+  </form>
+  <p class="hint" *ngIf="!touched()">Type at least two characters to start.</p>
+  <p class="hint" *ngIf="feedback()" [class.success]="feedback()?.includes('added')">{{ feedback() }}</p>
+  <div class="loader" *ngIf="loading()">
+    <span class="spinner"></span>
+    <span>Searching instruments…</span>
+  </div>
+  <div class="results" *ngIf="hits().length && !loading()">
+    <div class="result" *ngFor="let hit of hits()">
+      <div>
+        <p class="display">{{ hit.display }}</p>
+        <p class="meta">
+          {{ hit.segment }} · {{ hit.symbol }}
+          <ng-container *ngIf="hit.expiry"> · Exp {{ hit.expiry | date: 'mediumDate' }}</ng-container>
+          <ng-container *ngIf="hit.strike"> · {{ hit.strike | number: '1.0-2' }}</ng-container>
+          <ng-container *ngIf="hit.optionType">{{ hit.optionType }}</ng-container>
+        </p>
+      </div>
+      <div class="actions">
+        <a class="ghost" [routerLink]="['/chart', hit.instrumentKey]">Open chart</a>
+        <button
+          type="button"
+          class="pill"
+          [disabled]="alreadyAdded(hit)"
+          (click)="addToWatchlist(hit)"
+        >
+          {{ alreadyAdded(hit) ? 'In watchlist' : 'Add to watchlist' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <p class="hint" *ngIf="touched() && !hits().length && !loading()">No matches found.</p>
+</div>
