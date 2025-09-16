@@ -1,0 +1,140 @@
+.chart-page {
+  width: min(960px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.chart-header h2 {
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.status .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.status .dot.connected {
+  background: var(--rise);
+}
+
+.status .dot.connecting {
+  background: var(--accent-2);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tf-options {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.tf-options button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tf-options button.active {
+  background: var(--accent);
+}
+
+.history {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.error {
+  color: var(--fall);
+}
+
+.chart-area {
+  width: 100%;
+  overflow-x: auto;
+  background: rgba(35, 41, 58, 0.8);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.chart-area svg {
+  width: 100%;
+  height: 280px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.panel {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(35, 41, 58, 0.85);
+}
+
+.panel h3 {
+  margin-top: 0;
+}
+
+.orderbook table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.orderbook th,
+.orderbook td {
+  padding: 6px 4px;
+  text-align: right;
+}
+
+.orderbook th {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent-2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
