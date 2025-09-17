@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiBase: 'http://localhost:8081'
+  backendUrl: 'https://backendforautobot-production.up.railway.app'
 };

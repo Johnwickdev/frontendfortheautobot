@@ -31,25 +31,40 @@ export interface Tick {
   };
 }
 
-export type Timeframe = '1s' | '1m' | '5m';
+export type HistoryInterval = '1minute' | '5minute' | '15minute' | 'day';
 export type WsConnectionState = 'disconnected' | 'connecting' | 'connected';
 
 @Injectable({ providedIn: 'root' })
 export class MarketService {
   private http = inject(HttpClient);
   private zone = inject(NgZone);
-  private apiBase = environment.apiBase;
-  private wsBase = environment.apiBase.replace(/^http/, 'ws');
+  private backendUrl = environment.backendUrl;
+  private wsBase = this.backendUrl.replace(/^http/i, 'ws');
 
   private readonly connectionStateSubject = new BehaviorSubject<WsConnectionState>('disconnected');
   private socket?: WebSocketSubject<Tick>;
 
   readonly connectionState$ = this.connectionStateSubject.asObservable();
 
-  history(instrumentKey: string, tf: Timeframe, limit: number): Observable<Candle[]> {
-    const params = new HttpParams({ fromObject: { instrumentKey, tf, limit } });
+  history(
+    instrumentKey: string,
+    interval: HistoryInterval,
+    from?: string,
+    to?: string,
+    limit = 300
+  ): Observable<Candle[]> {
+    let params = new HttpParams()
+      .set('instrumentKey', instrumentKey)
+      .set('interval', interval)
+      .set('limit', limit.toString());
+    if (from) {
+      params = params.set('from', from);
+    }
+    if (to) {
+      params = params.set('to', to);
+    }
     return this.http
-      .get<Candle[] | { candles: Candle[] }>(`${this.apiBase}/api/market/history`, { params })
+      .get<Candle[] | { candles: Candle[] }>(`${this.backendUrl}/api/market/history`, { params })
       .pipe(map(res => this.normalizeCandles(Array.isArray(res) ? res : res?.candles ?? [])));
   }
 

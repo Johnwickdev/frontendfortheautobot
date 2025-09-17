@@ -13,11 +13,11 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class TickService {
   private http = inject(HttpClient);
-  private apiBase = environment.apiBase;
+  private backendUrl = environment.backendUrl;
 
   /** Stream of LTP values refreshed on every poll */
   private ltp$ = timer(0, 1000).pipe(
-    switchMap(() => this.http.get<{ ltp: number }>(`${this.apiBase}/md/ltp`)),
+    switchMap(() => this.http.get<{ ltp: number }>(`${this.backendUrl}/md/ltp`)),
     map(res => res.ltp),
     shareReplay({ bufferSize: 1, refCount: true })
   );
@@ -27,4 +27,3 @@ export class TickService {
     return this.ltp$;
   }
 }
-

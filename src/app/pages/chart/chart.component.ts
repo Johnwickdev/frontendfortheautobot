@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription, timer } from 'rxjs';
 import { retry } from 'rxjs/operators';
-import { MarketService, Candle, Tick, Timeframe, WsConnectionState } from '../../services/market.service';
+import { MarketService, Candle, Tick, HistoryInterval, WsConnectionState } from '../../services/market.service';
 import { WatchlistService } from '../../services/watchlist.service';
 
 interface CandleShape {
@@ -25,7 +25,7 @@ interface CandleShape {
 })
 export class ChartComponent implements OnInit, OnDestroy {
   instrumentKey = signal<string>('');
-  timeframe = signal<Timeframe>('1m');
+  timeframe = signal<HistoryInterval>('1minute');
   historyLoading = signal(false);
   historyError = signal<string | null>(null);
   candles = signal<Candle[]>([]);
@@ -36,7 +36,7 @@ export class ChartComponent implements OnInit, OnDestroy {
   bidAskLevels = signal<{ bidP: number; bidQ: number; askP: number; askQ: number }[]>([]);
   wsState = signal<WsConnectionState>('disconnected');
 
-  readonly timeframeOptions: Timeframe[] = ['1s', '1m', '5m'];
+  readonly timeframeOptions: HistoryInterval[] = ['1minute', '5minute', 'day'];
 
   private wsSub?: Subscription;
   private routeSub?: Subscription;
@@ -74,7 +74,7 @@ export class ChartComponent implements OnInit, OnDestroy {
     return match?.display ?? key;
   });
 
-  changeTimeframe(tf: Timeframe) {
+  changeTimeframe(tf: HistoryInterval) {
     if (this.timeframe() === tf) return;
     this.timeframe.set(tf);
     this.loadHistory();
@@ -85,7 +85,7 @@ export class ChartComponent implements OnInit, OnDestroy {
     if (!key) return;
     this.historyLoading.set(true);
     this.historyError.set(null);
-    this.market.history(key, this.timeframe(), 300).subscribe({
+    this.market.history(key, this.timeframe(), undefined, undefined, 300).subscribe({
       next: candles => {
         this.candles.set(candles);
         this.historyLoading.set(false);
@@ -188,14 +188,31 @@ export class ChartComponent implements OnInit, OnDestroy {
     this.candleShapes.set(shapes);
   }
 
-  private timeframeToMs(tf: Timeframe) {
+  private timeframeToMs(tf: HistoryInterval) {
     switch (tf) {
-      case '1s':
-        return 1000;
-      case '5m':
+      case '5minute':
         return 5 * 60 * 1000;
+      case '15minute':
+        return 15 * 60 * 1000;
+      case 'day':
+        return 24 * 60 * 60 * 1000;
       default:
         return 60 * 1000;
+    }
+  }
+
+  formatInterval(tf: HistoryInterval): string {
+    switch (tf) {
+      case '1minute':
+        return '1m';
+      case '5minute':
+        return '5m';
+      case '15minute':
+        return '15m';
+      case 'day':
+        return '1D';
+      default:
+        return tf;
     }
   }
 }

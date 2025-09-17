@@ -35,7 +35,7 @@ export interface Tick {
 export class MarketDataService {
   private http = inject(HttpClient);
   private zone = inject(NgZone);
-  private apiBase = environment.apiBase;
+  private backendUrl = environment.backendUrl;
 
   private sse: EventSource | null = null;
   private tickSub = new Subject<Tick>();
@@ -55,7 +55,7 @@ export class MarketDataService {
         ltp: number;
         ts: string;
         source: 'live' | 'influx';
-      }>(`${this.apiBase}/md/ltp?instrumentKey=${encodeURIComponent(key)}`, {
+      }>(`${this.backendUrl}/md/ltp?instrumentKey=${encodeURIComponent(key)}`, {
         observe: 'response',
       })
       .pipe(map(res => (res.status === 204 ? null : res.body || null)));
@@ -74,19 +74,19 @@ export class MarketDataService {
   /** fetch selection of main instrument and options */
   getSelection(): Observable<{ mainInstrument: string; options: string[] } | null> {
     return this.http
-      .get<{ mainInstrument: string; options: string[] }>(`${this.apiBase}/md/selection`)
+      .get<{ mainInstrument: string; options: string[] }>(`${this.backendUrl}/md/selection`)
       .pipe(catchError(() => of(null)));
   }
 
   /** load historical candles */
   getCandles(key: string): Observable<Candle[]> {
-    return this.http.get<Candle[]>(`${this.apiBase}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
+    return this.http.get<Candle[]>(`${this.backendUrl}/md/candles?instrumentKey=${encodeURIComponent(key)}&tf=1m&lookback=120`);
   }
 
   getSectorTrades(side: 'both' | 'CE' | 'PE' = 'both', limit = 50): Observable<{ rows: SectorTradeRow[]; source?: 'live' | 'influx' }> {
     const params = new HttpParams().set('limit', limit).set('side', side);
     return this.http
-      .get<SectorTradeRow[]>(`${this.apiBase}/md/sector-trades`, { params, observe: 'response' })
+      .get<SectorTradeRow[]>(`${this.backendUrl}/md/sector-trades`, { params, observe: 'response' })
       .pipe(
         map(res => {
           const header = res.headers.get('X-Source');
@@ -116,7 +116,7 @@ export class MarketDataService {
     this.disconnect();
     if (!keys.length) return;
     const params = keys.map(k => `instrumentKey=${encodeURIComponent(k)}`).join('&');
-    const url = `${this.apiBase}/md/stream?${params}`;
+    const url = `${this.backendUrl}/md/stream?${params}`;
     const open = () => {
       this.sse = new EventSource(url);
       this.connectionStatus.next(true);
