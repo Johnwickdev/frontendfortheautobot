@@ -18,7 +18,7 @@
         [class.active]="timeframe() === tf"
         (click)="changeTimeframe(tf)"
       >
-        {{ tf }}
+        {{ formatInterval(tf) }}
       </button>
     </div>
   </div>

@@ -12,17 +12,17 @@ export interface AuthStatus {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiBase = environment.apiBase;
+  private backendUrl = environment.backendUrl;
 
   /** Ask the backend for the login URL */
   getLoginUrl(): Observable<string> {
     return this.http
-      .get<{ url: string }>(`${this.apiBase}/auth/url`)
+      .get<{ url: string }>(`${this.backendUrl}/auth/url`)
       .pipe(map(r => r.url));
   }
 
   /** Fetch the current auth status */
   getStatus(): Observable<AuthStatus> {
-    return this.http.get<AuthStatus>(`${this.apiBase}/auth/status`);
+    return this.http.get<AuthStatus>(`${this.backendUrl}/auth/status`);
   }
 }
